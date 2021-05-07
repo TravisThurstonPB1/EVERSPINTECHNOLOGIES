@@ -1,4 +1,4 @@
-Declare @date as date =  /*Select T0.DocDate from IBT1 T0 Where T0.DocDate = */'[%0]'
+Declare @date as date = '20210430' -- /*Select T0.DocDate from IBT1 T0 Where T0.DocDate = */'[%0]'
 
 Select *, @date 'Selection Date', Convert(date,Getdate(),112) 'AsOfDate'  -- This select statement takes the the following subqueries and displays the information in the final report.
 from(  -- The sub query below returns the two union sub queries in a single sub query before the final report.
@@ -59,7 +59,7 @@ From(-- Declare @Date date = '20200930'   -- This subquery returns the on hand i
 	Union all 
 	-- This section is calculating the WIP On hand and WIP cost --
 
-	-- Declare @Date date = '20210331'
+	-- Declare @Date date = '20210430'
 	Select  Convert(date, T2.CreateDate, 112) 'WIPDateAdd'
 	, T0.ItemCode 'WIPItem'
 	, T2.DistNumber
@@ -82,13 +82,28 @@ From(-- Declare @Date date = '20200930'   -- This subquery returns the on hand i
 		When T0.ItemCode = 'MCKINLEY.09' then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/597),2,0)as Int) 
 		else Cast(sum(Distinct isnull(T4.RecvQty,0))as int) end 'WIPQty'
 	-- This calculates the cost of the WIP on hand including issued Cost of the Resources (per their issued cost at the time), and aggregates the costs together.
-	, Cast((isnull((sum(distinct T9.StockPrice) *abs(sum(distinct T0.Quantity))+ (isnull((T10.ResCost/T1.DefinedQty),0)*abs(sum(distinct T0.Quantity)))) /abs(sum(Distinct T0.Quantity)),T7.U_StdCost)/*+(isnull((Select Sum(CompTotal) 'WB' from WOR1 with(nolock) where ItemType = 290 and ItemCode like '%Walk%Back%' and WOR1.DocEntry = T1.BaseEntry),0)/T1.DefinedQty)*/)-isnull(T11.StockPrice,0) as money) 'WipCost'
+	--, Cast((isnull((sum(distinct T9.StockPrice) *abs(sum(distinct T0.Quantity))+ (isnull((T10.ResCost/(Select SUM(OITL.DefinedQty) 'TotalIssued' from OITL WHERE OITL.StockEff = 1 and OITL.DocType = 60 and OITL.DocDate <= @date and OITL.BaseEntry = T1.BaseEntry) /*sum(T1.DefinedQty)*/),0)*abs(sum(distinct T0.Quantity)))) /abs(sum(Distinct T0.Quantity)),T7.U_StdCost)/*+(isnull((Select Sum(CompTotal) 'WB' from WOR1 with(nolock) where ItemType = 290 and ItemCode like '%Walk%Back%' and WOR1.DocEntry = T1.BaseEntry),0)/(Select SUM(OITL.DefinedQty) 'TotalIssued' from OITL WHERE OITL.StockEff = 1 and OITL.DocType = 60 and OITL.DocDate <= @date and OITL.BaseEntry = T1.BaseEntry) T1.DefinedQty)*/)-isnull(T11.StockPrice,0) as money) 'WipCost'
+	, (T12.Remainder/(Select Count(Sysnumber) 'Records' from ITL1 inner join OITL on ITL1.LogEntry = OITL.LogEntry and OITL.StockEff =1 where OITL.BaseEntry = T1.BaseEntry and OITL.DocType = 60 and OITL.DocDate <= @date))/(Abs(sum(distinct T0.Quantity)) - Case when T0.ItemCode = 'WA01N79C' then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/1477),2,0)as int) 
+		When T0.ItemCode in ('WB06M35M','WB08M35M','WB07M35M') then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/4690),2,0)as int) 
+		when T0.ItemCode = 'WB02N43G-ENG' then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/365),2,0)as int) 
+		When T0.Itemcode = 'Logan_EWS' then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/607),2,0)AS int) 
+		When T0.ItemCode = 'WC01N10C-ENG' then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/43000),2,0)as int) 
+		When T0.Itemcode = 'WA00N44A' then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/430),2,0)as int) 
+		When T0.ITemcode = 'MR0A16AVYS35' then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/90),2,0)As Int) 
+		when T0.ITemCode in ('WA05N28J', 'WA04N28J-ENG') then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/3927),2,0)As Int) 
+		When T0.ItemCode in ('WB01N52R','WA00N52R-ENG', 'WB00N52R-ENG') then  Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/6560),2,0)As Int) 
+		When T0.ItemCode = 'WC24L72W' then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/898),2,0)as int) 
+		When T0.ItemCode = 'WC23L72W' then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/976),2,0)as int) 
+		When T0.ItemCode = 'WA01M13Y' then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/3898),2,0)as Int)  
+		When T0.ItemCode = 'MCKINLEY.09' then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/597),2,0)as Int) 
+		else Cast(sum(Distinct isnull(T4.RecvQty,0))as int) end) 'WipCost2'
 	--, T9.StockPrice
 	--, T11.StockPrice
 	--, T10.ResCost
 	, T9.FormatCode 'WIPInvAcct'
 	--, sum(distinct isnull(T4.RecvQty,0)) 'RecvQty'
-	--, abs(sum(T0.Quantity)) 'Issued'
+	--, abs(sum(DISTINCT T0.Quantity)) 'Issued'
+	--, SUM(DISTINCT T1.DefinedQty) 'IssuedtotalQty'
 	, Case when T5.QryGroup1 = 'Y' then 'FAB'
 	when T5.QryGroup2 = 'Y' then 'EWS'
 	When T5.QryGroup3 = 'Y' then 'ASSEM'
@@ -130,14 +145,38 @@ From(-- Declare @Date date = '20200930'   -- This subquery returns the on hand i
 	-- T8 subQuery is looking for Planned quantity of the WOR1 table of the Open T3 Production Orders
 	left join (select DocEntry, PlannedQty from WOR1 with(nolock) Where ItemType = 4) T8 on T3.DocEntry = T8.DocEntry
 	-- T9 subquery is looking for the issued quantity and cost of Issue of Production matched to the OITL transaction table
-	left join (Select DocEntry, LineNum, OACT.FormatCode, StockPrice, ItemType, Quantity 'IssuedQty' from IGE1 with(nolock) inner join OACT with(nolock) on IGE1.AcctCode = OACT.AcctCode where ItemType = 4 and IGE1.DocDate <= @date) T9 on T1.DocEntry = T9.DocEntry and T1.DocLine = T9.LineNum
+	left join (Select DocEntry, LineNum, OACT.FormatCode, StockPrice, ItemType/*, Quantity 'IssuedQty'*/ from IGE1 with(nolock) inner join OACT with(nolock) on IGE1.AcctCode = OACT.AcctCode where ItemType = 4 and IGE1.DocDate <= @date) T9 on T1.DocEntry = T9.DocEntry and T1.DocLine = T9.LineNum
 	-- T10 subquery is looking for Resource cost from Issued of production related to OITL transaction table
 	left join (Select BaseEntry, sum(StockPrice * Quantity) 'ResCost' from IGE1 with(nolock) where ItemType=290 and IGE1.DocDate <= @date Group by BaseEntry) T10 on T1.BaseEntry = T10.BaseEntry
 	-- T11 Subquery is looking for the Cost and Quantity of Receipt from Prdocution related to the Production order from the OITL transaction table
 	left join (-- Declare @Date date = '20210331'
-	Select IGN1.BaseEntry, IGN1.StockPrice, IGN1.Itemtype, IGN1.ItemCode, IGN1.Quantity from IGN1 with(nolock) inner join OIGN on IGN1.DocEntry = OIGN.DocEntry WHERE IGN1.DocDate <=@date and IGN1.WhsCode <> 'T_UTC_R' )T11 on T1.ItemCode = T11.ItemCode and T11.BaseEntry = T1.BaseEntry
-	Where T1.DocDate <= @date --and DistNumber = 'TZ68136.1L$1'
-	Group by T0.ItemCode, T5.QryGroup1, T5.QryGroup2, T5.QryGroup3, T5.Qrygroup4, T5.QryGroup5, T5.QryGroup6, T5.QryGroup7, T5.Qrygroup8, T5.Qrygroup9, T6.ItmsGrpNam, T2.DistNumber, Cast(T2.Notes as nvarchar), T1.LocCode, T1.BaseEntry, T2.CreateDate, /*T9.StockPrice,*/ T7.U_StdCost, T10.ResCost, T1.DefinedQty, T9.FormatCode, T2.LotNumber, T2.AbsEntry, T11.StockPrice--, T11.Quantity --, T9.StockPrice, T10.ResCost
+		Select IGN1.BaseEntry, IGN1.StockPrice, IGN1.Itemtype, IGN1.ItemCode /*, IGN1.Quantity*/ from IGN1 with(nolock) inner join OIGN on IGN1.DocEntry = OIGN.DocEntry WHERE IGN1.DocDate <=@date and IGN1.WhsCode <> 'T_UTC_R')T11 on T1.ItemCode = T11.ItemCode and T11.BaseEntry = T1.BaseEntry
+	-- Subquery to get total issued cost, minus total recieved cost, which would return the remaning cost in WIP
+	left Join (Select SUM(S2.IssuedCost) - Sum(ISNULL(S3.Recvcost,0)) 'Remainder', S2.BaseEntry
+			from(
+				Select sum(IssuedCost) 'IssuedCost', BaseEntry
+				From(
+					Select ROUND(SUM(StockPrice)*Quantity,2,2) 'IssuedCost', BaseEntry
+					From IGE1
+					Where IGE1.DocDate <= @date -- and BaseEntry = 17285
+					Group by Quantity, BaseEntry
+					)S0	
+				Group by BaseEntry					
+				)S2
+			Left Join (Select Sum(Recvcost) 'RecvCost', BaseEntry
+				From(
+					Select ROUND(SUM(StockPrice)*Quantity,2,2) 'Recvcost', BaseEntry
+					From IGN1
+					Where IGN1.DocDate <= @date --and  BaseEntry = 17285
+					Group by Quantity, BaseEntry
+					)S1
+				Group By BaseEntry
+				)S3 on S2.BaseEntry = S3.BaseEntry
+			Group by S2.BaseEntry
+			)T12 on T1.BaseEntry = T12.BaseEntry
+	Where T1.DocDate <= @date --and T1.BaseEntry = 17285 --and DistNumber = 'TZ60598.1X$4'
+	Group by T0.ItemCode, T5.QryGroup1, T5.QryGroup2, T5.QryGroup3, T5.Qrygroup4, T5.QryGroup5, T5.QryGroup6, T5.QryGroup7, T5.Qrygroup8, T5.Qrygroup9, T6.ItmsGrpNam, T2.DistNumber, Cast(T2.Notes as nvarchar), T1.LocCode, T1.BaseEntry, T2.CreateDate, T7.U_StdCost, T10.ResCost, /*T12.TotalIssued, T1.DefinedQty,*/ T9.FormatCode, T2.LotNumber, T2.AbsEntry, T11.StockPrice, T12.Remainder--, T11.Quantity 
+	--, T9.StockPrice, T10.ResCost
 	Having Abs(sum(distinct T0.Quantity)) - Case when T0.ItemCode = 'WA01N79C' then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/1477),2,0)as int) 
 		When T0.ItemCode in ('WB06M35M','WB08M35M','WB07M35M') then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/4690),2,0)as int) 
 		when T0.ItemCode = 'WB02N43G-ENG' then Cast(Round(sum(Distinct isnull(T4.RecvQty,0)/365),2,0)as int) 
