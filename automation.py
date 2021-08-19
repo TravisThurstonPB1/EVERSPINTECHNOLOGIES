@@ -72,8 +72,12 @@ CHM_Assy_Inv = pd.read_excel(open(file_CHM_Assy_Inv, 'rb'))
 CHM_Assy_Inv = CHM_Assy_Inv.replace(np.nan, '', regex=True)
 
 ######################## IMPORTANT NOTE: HERE WE HAVE TO PASS SHEET NAME   ###################################### 
-DAILY_WIP_UDG = pd.read_excel(open(file_Daily_WIP_UDG, 'rb'),sheet_name="Detail")
-DAILY_WIP_UDG = DAILY_WIP_UDG.replace(np.nan, '', regex=True)
+try:
+	DAILY_WIP_UDG = pd.read_excel(file_Daily_WIP_UDG, None)
+	DAILY_WIP_UDG = pd.read_excel(open(file_Daily_WIP_UDG, 'rb'),sheet_name="Detail")
+	DAILY_WIP_UDG = DAILY_WIP_UDG.replace(np.nan, '', regex=True)
+except FileNotFoundError:
+	print(file_Daily_WIP_UDG + " file is not found.")
 #################################################################################################################
 
 OSE_WIP = pd.read_excel(open(file_OSE_WIP, 'rb'))
@@ -404,35 +408,39 @@ for r in dataframe_to_rows(CHM_Assy_Inv, index=False, header=True):
 		ws_asy_WIP['E'+str(CHM_Assy_Inv_count)] = "CHM_Assy_Inv" # Location
 		CHM_Assy_Inv_count = CHM_Assy_Inv_count + 1
 
-DAILY_WIP_UDG_count = 0
-for r in dataframe_to_rows(DAILY_WIP_UDG, index=False, header=True):
-	if DAILY_WIP_UDG_count == 0 and r[4] == "Customer Device Name":
-		DAILY_WIP_UDG_count = CHM_Assy_Inv_count
-	elif DAILY_WIP_UDG_count > 1 and r[4] != "":
+try:
+	DAILY_WIP_UDG_count = 0
+	for r in dataframe_to_rows(DAILY_WIP_UDG, index=False, header=True):
+		if DAILY_WIP_UDG_count == 0 and r[4] == "Customer Device Name":
+			DAILY_WIP_UDG_count = CHM_Assy_Inv_count
+		elif DAILY_WIP_UDG_count > 1 and r[4] != "":
 
-		def checkLot(r):
-			if len(r[8]) > 0:
-				return r[8]
-			else:
-				return r[5]
-		def checkQty(r):
-			if len(r[13]) > 0:
-				return int(r[13])
-			else:
-				total = 0
-				for index in range(18,30): # Taking column from O to X from xl file.
-					r[index] = str(r[index])
-					r[index] = r[index].replace(" ", "")
-					if r[index].isnumeric():
-						total = total + int(r[index])	
-				return total
-			
-		ws_asy_WIP['A'+str(DAILY_WIP_UDG_count)] = r[4] # PartID
-		ws_asy_WIP['B'+str(DAILY_WIP_UDG_count)] = checkLot(r) # LotID
-		ws_asy_WIP['C'+str(DAILY_WIP_UDG_count)] = "" # ParentLot
-		ws_asy_WIP['D'+str(DAILY_WIP_UDG_count)] = checkQty(r) # Qty
-		ws_asy_WIP['E'+str(DAILY_WIP_UDG_count)] = "DAILY_WIP_UDG" # Location
-		DAILY_WIP_UDG_count = DAILY_WIP_UDG_count + 1
+			def checkLot(r):
+				if len(r[8]) > 0:
+					return r[8]
+				else:
+					return r[5]
+			def checkQty(r):
+				if len(r[13]) > 0:
+					return int(r[13])
+				else:
+					total = 0
+					for index in range(18,30): # Taking column from O to X from xl file.
+						r[index] = str(r[index])
+						r[index] = r[index].replace(" ", "")
+						if r[index].isnumeric():
+							total = total + int(r[index])	
+					return total
+				
+			ws_asy_WIP['A'+str(DAILY_WIP_UDG_count)] = r[4] # PartID
+			ws_asy_WIP['B'+str(DAILY_WIP_UDG_count)] = checkLot(r) # LotID
+			ws_asy_WIP['C'+str(DAILY_WIP_UDG_count)] = "" # ParentLot
+			ws_asy_WIP['D'+str(DAILY_WIP_UDG_count)] = checkQty(r) # Qty
+			ws_asy_WIP['E'+str(DAILY_WIP_UDG_count)] = "DAILY_WIP_UDG" # Location
+			DAILY_WIP_UDG_count = DAILY_WIP_UDG_count + 1
+except NameError:
+	DAILY_WIP_UDG_count = CHM_Assy_Inv_count
+	pass
 
 OSE_WIP_count = 0
 for r in dataframe_to_rows(OSE_WIP, index=False, header=True):
