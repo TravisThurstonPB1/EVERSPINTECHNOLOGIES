@@ -19,10 +19,10 @@ filedate = currentday.strftime('%Y%m%d')
 
 
 def fileCreate():
-	sapsqlcon = pypyodbc.connect('DRIVER={0}; SERVER=10.0.0.6\SAPB1_SQL; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))		## Create Connection to SQL Server 
+	sapsqlcon = pypyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))		## Create Connection to SQL Server 
 	cursor = sapsqlcon.cursor()		## Create Cursor Object
 	
-	onhandmatch=[('Stage','Family','SAPItemCode', 'SAPLotNumber', 'SAPParentLot', 'SAPOnHand', 'SAPOnHandCost', 'SAPWIPItemCode', 'SAPWIPLot', 'SAPWIPParentLot', 'SAPWIPOnHand', 'SAPWIPOnHandCost', '3PItemCode', '3POriginalItemCode', '3PLot', '3PParentLot', '3POnHand', '3POnHandCost', 'VendorFileName', 'AsOfDate')]
+	onhandmatch=[('Stage','Family','SAPItemCode', 'SAPLotNumber', 'SAPParentLot', 'SAPOnHand', 'SAPWIPItemCode', 'SAPWIPLot', 'SAPWIPParentLot', 'SAPWIPOnHand', '3PItemCode', '3POriginalItemCode', '3PLot', '3PParentLot', '3POnHand', 'VendorFileName', 'AsOfDate')]
 	
 	print("Start SAP Match Gather...")
 	query1 = ("Select * from EverspinTech.dbo.vw_SAP_3P_Match")
@@ -44,7 +44,7 @@ def fileCreate():
 	
 # ## ---------------------------- ## Adding Partial Match Sheet
 	
-	partialmatch =[('Stage','Family','SAPItemCode', 'SAPLotNumber', 'SAPParentLot', 'SAPOnHand', 'SAPOnHandCost', 'SAPWIPItemCode', 'SAPWIPLot', 'SAPWIPParentLot', 'SAPWIPOnHand', 'SAPWIPOnHandCost', '3PItemCode', '3POriginalItemCode', '3PLot', '3PParentLot', '3POnHand', '3POnHandCost', 'VendorFileName', 'AsOfDate', 'Delta')]
+	partialmatch =[('Stage','Family','SAPItemCode', 'SAPLotNumber', 'SAPParentLot', 'SAPOnHand', 'SAPWIPItemCode', 'SAPWIPLot', 'SAPWIPParentLot', 'SAPWIPOnHand', '3PItemCode', '3POriginalItemCode', '3PLot', '3PParentLot', '3POnHand', 'VendorFileName', 'AsOfDate', 'Delta')]
 	
 	print("Start Partial match gather...")
 	query2 = ("Select * from EverspinTech.dbo.vw_SAP_3P_PartialMatch")
@@ -69,9 +69,9 @@ def fileCreate():
 		
 	sapnomatch = []
 	thrdnomatch = []
-	matches = [('Stage','Family','SAPItemCode', 'SAPLotNumber', 'SAPParentLot', 'SAPOnHand', 'SAPOnHandCost', 'SAPWIPItemCode', 'SAPWIPLot', 'SAPWIPParentLot', 'SAPWIPOnHand', 'SAPWIPOnHandCost', '3PItemCode', '3POriginalItemCode', '3PLot', '3PParentLot', '3POnHand', '3POnHandCost', 'VendorFileName', 'AsOfDate', 'Delta')]
+	matches = [('Stage','Family','SAPItemCode', 'SAPLotNumber', 'SAPParentLot', 'SAPOnHand', 'SAPWIPItemCode', 'SAPWIPLot', 'SAPWIPParentLot', 'SAPWIPOnHand', '3PItemCode', '3POriginalItemCode', '3PLot', '3PParentLot', '3POnHand', 'VendorFileName', 'AsOfDate', 'Delta')]
 	sapnomatches = []
-	thrdnomatches = [('Stage','Family','SAPItemCode', 'SAPLotNumber', 'SAPParentLot', 'SAPOnHand', 'SAPOnHandCost', 'SAPWIPItemCode', 'SAPWIPLot', 'SAPWIPParentLot', 'SAPWIPOnHand', 'SAPWIPOnHandCost', '3PItemCode', '3POriginalItemCode', '3PLot', '3PParentLot', '3POnHand', '3POnHandCost', 'VendorFileName', 'AsOfDate')]
+	thrdnomatches = [('Stage','Family','SAPItemCode', 'SAPLotNumber', 'SAPParentLot', 'SAPOnHand', 'SAPWIPItemCode', 'SAPWIPLot', 'SAPWIPParentLot', 'SAPWIPOnHand', '3PItemCode', '3POriginalItemCode', '3PLot', '3PParentLot', '3POnHand', 'VendorFileName', 'AsOfDate')]
 	
 	print("Start SAP No Match Gather...")
 	query3 = ("Select * from EverspinTech.dbo.vw_SAPNoMatch")
@@ -96,18 +96,18 @@ def fileCreate():
 	
 	print("Comparing data....")
 	for x in sapnomatch:
-		stage, fam, sapitem, saplot, sapplot, sapoh, sapohcost, wipitem, wiplot, wipplot, wipoh, wipohcost, thrditem, orgthrditem, thrdlot, thrdplot, thrdoh, thrdohcost, date = x
+		stage, fam, sapitem, saplot, sapplot, sapoh, wipitem, wiplot, wipplot, wipoh, thrditem, orgthrditem, thrdlot, thrdplot, thrdoh, date = x
 		if sapitem == '':
 			for y in thrdnomatch:
-				ystage, yfam, ysapitem, ysaplot, ysapplot, ysapoh, ysapohcost, ywipitem, ywiplot, ywipplot, ywipoh, ywipohcost, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, ythrdohcost, yvendor , ydate = y
+				ystage, yfam, ysapitem, ysaplot, ysapplot, ysapoh, ywipitem, ywiplot, ywipplot, ywipoh, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, yvendor , ydate = y
 				
 				if wipplot =='':
 					if wiplot == ythrdplot:
-						result = (stage, fam, sapitem, saplot, sapplot, sapoh, sapohcost, wipitem, wiplot, wipplot, wipoh, wipohcost, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, ythrdohcost, yvendor, ydate, (sapoh+wipoh)-ythrdoh)
+						result = (stage, fam, sapitem, saplot, sapplot, sapoh, wipitem, wiplot, wipplot, wipoh, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, yvendor, ydate, (sapoh+wipoh)-ythrdoh)
 						matches.append(result)
 						thrdnomatch.remove(y)
 				elif wipplot == ythrdplot:
-					result = (stage, fam, sapitem, saplot, sapplot, sapoh, sapohcost, wipitem, wiplot, wipplot, wipoh, wipohcost, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, ythrdohcost, yvendor, ydate, (sapoh+wipoh)-ythrdoh)
+					result = (stage, fam, sapitem, saplot, sapplot, sapoh, wipitem, wiplot, wipplot, wipoh, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, yvendor, ydate, (sapoh+wipoh)-ythrdoh)
 					matches.append(result)
 					thrdnomatch.remove(y)
 					
@@ -120,23 +120,23 @@ def fileCreate():
 				
 		else:
 			for y in thrdnomatch:
-				ystage, yfam, ysapitem, ysaplot, ysapplot, ysapoh, ysapohcost, ywipitem, ywiplot, ywipplot, ywipoh, ywipohcost, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, ythrdohcost, yvendor, ydate = y
+				ystage, yfam, ysapitem, ysaplot, ysapplot, ysapoh, ywipitem, ywiplot, ywipplot, ywipoh, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, yvendor, ydate = y
 				
 				if sapplot=='':
 					if saplot==ythrdplot:
-						result = (stage, fam, sapitem, saplot, sapplot, sapoh, sapohcost, wipitem, wiplot, wipplot, wipoh, wipohcost, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, ythrdohcost, yvendor, ydate, (sapoh+wipoh)-ythrdoh)
+						result = (stage, fam, sapitem, saplot, sapplot, sapoh, wipitem, wiplot, wipplot, wipoh, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, yvendor, ydate, (sapoh+wipoh)-ythrdoh)
 						matches.append(result)
 						thrdnomatch.remove(y)
 					elif saplot==ythrdlot:
-						result = (stage, fam, sapitem, saplot, sapplot, sapoh, sapohcost, wipitem, wiplot, wipplot, wipoh, wipohcost, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, ythrdohcost,yvendor, ydate, (sapoh+wipoh)-ythrdoh)
+						result = (stage, fam, sapitem, saplot, sapplot, sapoh, wipitem, wiplot, wipplot, wipoh, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, yvendor, ydate, (sapoh+wipoh)-ythrdoh)
 						matches.append(result)
 						thrdnomatch.remove(y)
 				elif sapplot == ythrdplot:
-					result = (stage, fam, sapitem, saplot, sapplot, sapoh, sapohcost, wipitem, wiplot, wipplot, wipoh, wipohcost, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, ythrdohcost, yvendor, ydate, (sapoh+wipoh)-ythrdoh)
+					result = (stage, fam, sapitem, saplot, sapplot, sapoh, wipitem, wiplot, wipplot, wipoh, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, yvendor, ydate, (sapoh+wipoh)-ythrdoh)
 					matches.append(result)
 					thrdnomatch.remove(y)
 				elif saplot == ythrdlot:
-					result = (stage, fam, sapitem, saplot, sapplot, sapoh, sapohcost, wipitem, wiplot, wipplot, wipoh, wipohcost, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, ythrdohcost, yvendor, ydate, (sapoh+wipoh)-ythrdoh)
+					result = (stage, fam, sapitem, saplot, sapplot, sapoh, wipitem, wiplot, wipplot, wipoh, ythrditem, yorgthrditem, ythrdlot, ythrdplot, ythrdoh, yvendor, ydate, (sapoh+wipoh)-ythrdoh)
 					matches.append(result)
 					thrdnomatch.remove(y)
 			
@@ -154,7 +154,7 @@ def fileCreate():
 	
 	cleanedlist = list(set(sapnomatches))
 
-	cleanedlist2 = [('Stage','Family','SAPItemCode', 'SAPLotNumber', 'SAPParentLot', 'SAPOnHand', 'SAPOnHandCost', 'SAPWIPItemCode', 'SAPWIPLot', 'SAPWIPParentLot', 'SAPWIPOnHand', 'SAPWIPOnHandCost', '3PItemCode', '3POriginalItemCode', '3PLot', '3PParentLot', '3POnHand', '3POnHandCost', 'AsOfDate')]
+	cleanedlist2 = [('Stage','Family','SAPItemCode', 'SAPLotNumber', 'SAPParentLot', 'SAPOnHand', 'SAPWIPItemCode', 'SAPWIPLot', 'SAPWIPParentLot', 'SAPWIPOnHand', '3PItemCode', '3POriginalItemCode', '3PLot', '3PParentLot', '3POnHand', 'AsOfDate')]
 	
 	for n in cleanedlist:
 		cleanedlist2.append(n)
@@ -235,3 +235,4 @@ def fileCreate():
 ##------------------------------------------##
 	
 fileCreate()
+
