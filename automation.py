@@ -65,7 +65,8 @@ try:
 	CHM_CP_WIP = pd.read_excel(open(file_CHM_CP_WIP, 'rb'))
 	CHM_CP_WIP = CHM_CP_WIP.replace(np.nan, '', regex=True)
 except FileNotFoundError:
-	print(file_CHM_CP_WIP + " file is not found.")		
+	pass
+	# print(file_CHM_CP_WIP + " file is not found.")		
 
 
 CHM_Assy_Inv = pd.read_excel(open(file_CHM_Assy_Inv, 'rb'))
@@ -275,8 +276,8 @@ for r in dataframe_to_rows(sub_ledger, index=False, header=True):
 		ws_sub_ledger_recon['V'+str(ws_sub_ledger_recon_count)] = "=SUM(R"+str(ws_sub_ledger_recon_count)+":U"+str(ws_sub_ledger_recon_count)+")"
 		ws_sub_ledger_recon['W'+str(ws_sub_ledger_recon_count)] = "=+K"+str(ws_sub_ledger_recon_count)+"-V"+str(ws_sub_ledger_recon_count)
 		ws_sub_ledger_recon['X'+str(ws_sub_ledger_recon_count)] = "=SUMIF('UTC Pivot'!A:A,'Subledger Recon'!F"+str(ws_sub_ledger_recon_count)+",'UTC Pivot'!B:B)"
-		ws_sub_ledger_recon['Y'+str(ws_sub_ledger_recon_count)] = "=SUMIF('UTC Pivot'!D:D,'Subledger Recon'!F"+str(ws_sub_ledger_recon_count)+",'UTC Pivot'!E:E)"
-		ws_sub_ledger_recon['Z'+str(ws_sub_ledger_recon_count)] = "=SUMIF('UTC Pivot'!H:H,'Subledger Recon'!F"+str(ws_sub_ledger_recon_count)+",'UTC Pivot'!J:J)"
+		ws_sub_ledger_recon['Y'+str(ws_sub_ledger_recon_count)] = "=SUMIF('UTC Pivot'!D:D,'Subledger Recon'!F"+str(ws_sub_ledger_recon_count)+",'UTC Pivot'!F:F)"
+		ws_sub_ledger_recon['Z'+str(ws_sub_ledger_recon_count)] = "=SUMIF('UTC Pivot'!I:I,'Subledger Recon'!F"+str(ws_sub_ledger_recon_count)+",'UTC Pivot'!J:J)"
 		ws_sub_ledger_recon['AA'+str(ws_sub_ledger_recon_count)] = "=SUMIF('UTC Pivot'!L:L,'Subledger Recon'!F"+str(ws_sub_ledger_recon_count)+",'UTC Pivot'!M:M)"
 		ws_sub_ledger_recon['AB'+str(ws_sub_ledger_recon_count)] = "=VLOOKUP(G"+str(ws_sub_ledger_recon_count)+",'UTC Pivot'!A:B,2,FALSE)"
 		ws_sub_ledger_recon['AC'+str(ws_sub_ledger_recon_count)] = "=COUNTIF('UTC Pivot'!H:H,'Subledger Recon'!G"+str(ws_sub_ledger_recon_count)+	")"
@@ -318,6 +319,9 @@ ws_asy_WIP['B1'] = "LotID"
 ws_asy_WIP['C1'] = "ParentLot"
 ws_asy_WIP['D1'] = "Qty"
 ws_asy_WIP['E1'] = "Location"
+ws_asy_WIP['F1'] = "Subledger Qty"
+ws_asy_WIP['G1'] = "Diff Qty"
+
 
 Amkor_ASY_count = 1
 for r in dataframe_to_rows(ASY_Amkor, index=False, header=True):
@@ -336,6 +340,8 @@ for r in dataframe_to_rows(ASY_Amkor, index=False, header=True):
 		ws_asy_WIP['C'+str(Amkor_ASY_count)] = r[16] # ParentLot
 		ws_asy_WIP['D'+str(Amkor_ASY_count)] = checkQty(r[62]) # Qty
 		ws_asy_WIP['E'+str(Amkor_ASY_count)] = "Amkor" # Location
+		ws_asy_WIP['F'+str(Amkor_ASY_count)] = "=IFERROR(VLOOKUP(B"+str(Amkor_ASY_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(Amkor_ASY_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
+		ws_asy_WIP['G'+str(Amkor_ASY_count)] = "=D"+str(Amkor_ASY_count)+"-F"+str(Amkor_ASY_count)+""
 		Amkor_ASY_count = Amkor_ASY_count + 1
 
 CHM_Assy_WIP_count = 0
@@ -363,6 +369,8 @@ for r in dataframe_to_rows(CHM_Assy_WIP, index=False, header=True):
 		ws_asy_WIP['C'+str(CHM_Assy_WIP_count)] = "" # ParentLot
 		ws_asy_WIP['D'+str(CHM_Assy_WIP_count)] = checkQty(r) # Qty
 		ws_asy_WIP['E'+str(CHM_Assy_WIP_count)] = "CHM Assy WIP" # Location
+		ws_asy_WIP['F'+str(CHM_Assy_WIP_count)] = "=IFERROR(VLOOKUP(B"+str(CHM_Assy_WIP_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(CHM_Assy_WIP_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
+		ws_asy_WIP['G'+str(CHM_Assy_WIP_count)] = "=D"+str(CHM_Assy_WIP_count)+"-F"+str(CHM_Assy_WIP_count)+""
 		CHM_Assy_WIP_count = CHM_Assy_WIP_count + 1
 	
 
@@ -384,6 +392,8 @@ try:
 			ws_asy_WIP['C'+str(CHM_CP_WIP_count)] = "" # ParentLot
 			ws_asy_WIP['D'+str(CHM_CP_WIP_count)] = checkQty(r[9]) # Qty
 			ws_asy_WIP['E'+str(CHM_CP_WIP_count)] = "CHM_CP_WIP" # Location
+			ws_asy_WIP['F'+str(CHM_CP_WIP_count)] = "=IFERROR(VLOOKUP(B"+str(CHM_CP_WIP_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(CHM_CP_WIP_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
+			ws_asy_WIP['G'+str(CHM_CP_WIP_count)] = "=D"+str(CHM_CP_WIP_count)+"-F"+str(CHM_CP_WIP_count)+""
 			CHM_CP_WIP_count = CHM_CP_WIP_count + 1
 except NameError:
 	CHM_CP_WIP_count = CHM_Assy_WIP_count
@@ -406,6 +416,8 @@ for r in dataframe_to_rows(CHM_Assy_Inv, index=False, header=True):
 		ws_asy_WIP['C'+str(CHM_Assy_Inv_count)] = "" # ParentLot
 		ws_asy_WIP['D'+str(CHM_Assy_Inv_count)] = checkQty(r[5]) # Qty
 		ws_asy_WIP['E'+str(CHM_Assy_Inv_count)] = "CHM_Assy_Inv" # Location
+		ws_asy_WIP['F'+str(CHM_Assy_Inv_count)] = "=IFERROR(VLOOKUP(B"+str(CHM_Assy_Inv_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(CHM_Assy_Inv_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
+		ws_asy_WIP['G'+str(CHM_Assy_Inv_count)] = "=D"+str(CHM_Assy_Inv_count)+"-F"+str(CHM_Assy_Inv_count)+""
 		CHM_Assy_Inv_count = CHM_Assy_Inv_count + 1
 
 try:
@@ -437,6 +449,8 @@ try:
 			ws_asy_WIP['C'+str(DAILY_WIP_UDG_count)] = "" # ParentLot
 			ws_asy_WIP['D'+str(DAILY_WIP_UDG_count)] = checkQty(r) # Qty
 			ws_asy_WIP['E'+str(DAILY_WIP_UDG_count)] = "DAILY_WIP_UDG" # Location
+			ws_asy_WIP['F'+str(DAILY_WIP_UDG_count)] = "=IFERROR(VLOOKUP(B"+str(DAILY_WIP_UDG_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(DAILY_WIP_UDG_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
+			ws_asy_WIP['G'+str(DAILY_WIP_UDG_count)] = "=D"+str(DAILY_WIP_UDG_count)+"-F"+str(DAILY_WIP_UDG_count)+""
 			DAILY_WIP_UDG_count = DAILY_WIP_UDG_count + 1
 except NameError:
 	DAILY_WIP_UDG_count = CHM_Assy_Inv_count
@@ -467,6 +481,8 @@ for r in dataframe_to_rows(OSE_WIP, index=False, header=True):
 		ws_asy_WIP['C'+str(OSE_WIP_count)] = "" # ParentLot
 		ws_asy_WIP['D'+str(OSE_WIP_count)] = checkQty(r) # Qty
 		ws_asy_WIP['E'+str(OSE_WIP_count)] = "OSE_WIP" # Location
+		ws_asy_WIP['F'+str(OSE_WIP_count)] = "=IFERROR(VLOOKUP(B"+str(OSE_WIP_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(OSE_WIP_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
+		ws_asy_WIP['G'+str(OSE_WIP_count)] = "=D"+str(OSE_WIP_count)+"-F"+str(OSE_WIP_count)+""
 		OSE_WIP_count = OSE_WIP_count + 1
 
 
@@ -487,6 +503,8 @@ for r in dataframe_to_rows(UTC_EVERSPIN_AssyWIP, index=False, header=True):
 		ws_asy_WIP['C'+str(UTC_EVERSPIN_AssyWIP_count)] = "" # ParentLot
 		ws_asy_WIP['D'+str(UTC_EVERSPIN_AssyWIP_count)] = checkQty(r[11]) # Qty
 		ws_asy_WIP['E'+str(UTC_EVERSPIN_AssyWIP_count)] = "UTC_EVERSPIN_AssyWIP" # Location
+		ws_asy_WIP['F'+str(UTC_EVERSPIN_AssyWIP_count)] = "=IFERROR(VLOOKUP(B"+str(UTC_EVERSPIN_AssyWIP_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(UTC_EVERSPIN_AssyWIP_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
+		ws_asy_WIP['G'+str(UTC_EVERSPIN_AssyWIP_count)] = "=D"+str(UTC_EVERSPIN_AssyWIP_count)+"-F"+str(UTC_EVERSPIN_AssyWIP_count)+""
 		UTC_EVERSPIN_AssyWIP_count = UTC_EVERSPIN_AssyWIP_count + 1
 
 UTL_Assy_count = 0
@@ -506,7 +524,14 @@ for r in dataframe_to_rows(UTL_Assy, index=False, header=True):
 		ws_asy_WIP['C'+str(UTL_Assy_count)] = "" # ParentLot
 		ws_asy_WIP['D'+str(UTL_Assy_count)] = checkQty(r[34]) # Qty
 		ws_asy_WIP['E'+str(UTL_Assy_count)] = "UTL_Assy" # Location
+		ws_asy_WIP['F'+str(UTL_Assy_count)] = "=IFERROR(VLOOKUP(B"+str(UTL_Assy_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(UTL_Assy_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
+		ws_asy_WIP['G'+str(UTL_Assy_count)] = "=D"+str(UTL_Assy_count)+"-F"+str(UTL_Assy_count)+""
 		UTL_Assy_count = UTL_Assy_count + 1
+
+ws_asy_WIP['A'+str(UTL_Assy_count)] = "Total"
+ws_asy_WIP['D'+str(UTL_Assy_count)] = "=SUM(D2:D"+str(UTL_Assy_count-1)+")"
+ws_asy_WIP['F'+str(UTL_Assy_count)] = "=SUM(F2:F"+str(UTL_Assy_count-1)+")"
+ws_asy_WIP['G'+str(UTL_Assy_count)] = "=SUM(G2:G"+str(UTL_Assy_count-1)+")"
 
 ######### PIVOT TABLE FOR THE ASSEMBLY TAB ###################################
 count = 1;partID= [];LotID= [];ParentLot= [];Qty= [];Location = [] 
@@ -911,4 +936,6 @@ else:
 
 wb.save('output - '+ str(x.day)+'-'+ str(month)+'-'+ str(x.year) +'.xlsx')
 print("Process Done!")
+
+
 
