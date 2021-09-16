@@ -46,7 +46,7 @@ def dataGather1():
 #		results = cursor1.fetchone()
 #		#bar.update()
 #	#bar.finish()
-	mySQLcomVT2 = ("select distinct t2.workOrder, t1.partNumber, t1.lotID, cast(sum(distinct t1.qty) as unsigned) as 'qty', ifnull(t3.sourceDevice, t1.sourceDevice) 'assyPart', ifnull(t4.assyLot,'NA') 'AssyLot' from mtsdb.tblWorkOrderItem t1 inner join mtsdb.tblWorkOrder t2 on t1.workOrderID = t2.workOrderID left join mtsdb.tblProdLotInfo t3 on (t1.lotID = t3.prodLot or t1.lotID = t3.assyLot) left join mtsdb.tblFTLotEndTrans t4 on t1.lotID = t4.startLot where t1.inputTime >= date_add(curdate(), INTERVAL -60 day) and t1.lotID != 'NA' and t1.partNumber != 'NA'  group by t2.workOrder, t1.partNumber, t1.lotID, t3.sourceDevice order by t2.workOrder")
+	mySQLcomVT2 = ("select distinct t2.workOrder, t1.partNumber, t1.lotID, cast(sum(distinct t1.qty) as unsigned) as 'qty', ifnull(t3.sourceDevice, t1.sourceDevice) 'assyPart', ifnull(t4.assyLot,'NA') 'AssyLot' from mtsdb.tblWorkOrderItem t1 inner join mtsdb.tblWorkOrder t2 on t1.workOrderID = t2.workOrderID left join mtsdb.tblProdLotInfo t3 on (t1.lotID = t3.prodLot or t1.lotID = t3.assyLot) left join mtsdb.tblFTLotEndTrans t4 on t1.lotID = t4.startLot where t1.inputTime >= date_add(curdate(), INTERVAL -120 day) and t1.lotID != 'NA' and t1.partNumber != 'NA'  group by t2.workOrder, t1.partNumber, t1.lotID, t3.sourceDevice order by t2.workOrder")
 	cursor1.execute(mySQLcomVT2)
 	results = cursor1.fetchone()
 	while results:
@@ -74,7 +74,7 @@ def dataGather1():
 #####Data Parse handling#########		
 def dataParse2():
 	print("Starting data parse for combined Spinweb UTC orders and gather from SAP...")
-	connection = pyodbc.connect('DRIVER={0}; SERVER=10.0.0.6\SAPB1_SQL; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
+	connection = pyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
 	cursor2 = connection.cursor()
 	print("Parse 1....")
 	for x in preimportEVS2:
@@ -135,7 +135,7 @@ def dataParse2():
 			if testresult3[5] == 'L':
 				pass
 			else:
-				test6 = ("select Cast(sum(abs(itl1.quantity)) as int) as Issued, oitl.BaseEntry, OBTN.Distnumber, convert(varchar, OBTN.notes) as ParentLot from OBTN WITH(NOLOCK) inner join itl1 on obtn.SysNumber = itl1.SysNumber and OBTN.ItemCode = ITL1.ItemCode inner join oitl WITH(NOLOCK) on itl1.logentry = oitl.logentry where oitl.baseentry = '{0}' and OBTN.ItemCode like '{1}%' group by OITL.BaseEntry, CONVERT(varchar, OBTN.Notes), OBTN.Distnumber".format(testresult3[0], testresult3[3]))
+				test6 = ("select Cast(sum(abs(itl1.quantity)) as int) as Issued, oitl.BaseEntry, OBTN.Distnumber, convert(varchar, OBTN.notes) as ParentLot from OBTN WITH(NOLOCK) inner join itl1 on obtn.SysNumber = itl1.SysNumber and OBTN.ItemCode = ITL1.ItemCode inner join oitl WITH(NOLOCK) on itl1.logentry = oitl.logentry where oitl.baseentry = '{0}' and OBTN.Distnumber = '{1}' group by OITL.BaseEntry, CONVERT(varchar, OBTN.Notes), OBTN.Distnumber".format(testresult3[0], x[2]))
 				#test6 = ("select T4.U_SpinwebNo, T3.BaseEntry, T4.PlannedQty, T0.ItemCode, T0.DistNumber, T0.Notes, T1.Location, T1.WhsCode, cast((select abs(sum(S0.quantity)) as 'Receipt'from EverspinTech.dbo.b1_snbopenqtyinnerview S0 where S0.itemcode = T0.ItemCode and S0.SysNumber = T0.SysNumber and S0.applytype = 59 group by S0.applytype) - (select Case When (select abs(sum(S1.quantity)) as 'issued'from EverspinTech.dbo.b1_snbopenqtyinnerview S1 where S1.itemcode = T0.ItemCode and S1.SysNumber = T0.SysNumber and S1.applytype = 60 group by S1.applytype) is not null then (select abs(sum(S1.quantity)) as 'issued'from EverspinTech.dbo.b1_snbopenqtyinnerview S1 where S1.itemcode = T0.ItemCode and S1.SysNumber = T0.SysNumber and S1.applytype = 60 group by S1.applytype) else abs(0) end as 'Issued')as INT) as 'On Hand', t3.DocEntry from EverspinTech.dbo.OBTN t0 inner join EverspinTech.dbo.OBTW t1 on t0.absentry = t1.mdabsentry inner join EverspinTech.dbo.ITL1 T2 on t0.absentry = T2.mdabsEntry inner join EverspinTech.dbo.OITL t3 on t2.LogEntry = t3.LogEntry inner join EverspinTech.dbo.OWOR t4 on t3.BaseEntry = t4.DocNum where T1.Location like '{0}'and T0.ItemCode like '{1}%' and T4.PlannedQty = '{2}' and t3.basetype = '202' and t3.DocType = '59'".format(x[2], x[4], x[3]))
 				cursor2.execute(test6)
 				testresult5 = cursor2.fetchone()
@@ -218,7 +218,7 @@ def createPRDOTbl ():
 		if importSAP != False:
 			for x in importSAP:
 				a, b, c, d, e, f, g, h = x
-				query1 = ("select distinct t2.workOrder, '0' as PONumber, t1.partNumber, sum(t1.qty) as 'PlannedQty', '{0}' as 'FinishWhse', t1.flow, t1.lotType, t1.traceCode, t1.lotID, '{1}' as 'On Hand', '{2}' as 'SourceDevice' from mtsdb.tblWorkOrderItem t1 inner join mtsdb.tblWorkOrder t2 on t1.workOrderID = t2.workOrderID left join mtsdb.tblProdLotInfo t3 on t1.lotID = t3.prodLot where t2.workOrder = '{3}' and t1.partNumber = '{4}' and t1.lotID = '{5}' Group by t2.workOrder, t1.partNumber, t2.vendor, t1.flow, t1.lotType, t1.traceCode, t1.lotID Having sum(t1.qty) <= '{6}' or cast(sum(distinct t1.qty) as unsigned) = '{7}'".format(h, f, g, a, b, c, d, d))
+				query1 = ("select distinct t2.workOrder, '0' as PONumber, Case When t1.partNumber = 'CONDORTS' then 'CondorTS' when t1.partNumber = 'LYNX16TS' then 'Lynx16TS' when t1.partNumber = 'PANTHER16TS' then 'Panther16TS' When t1.partNumber = 'PANTHER16BG' then 'Panther16BG' when t1.partNumber = 'LYNX16BG' then 'Lynx16BG' when t1.partNumber = 'CONDORBG' then 'CondorBG' else t1.partNumber end 'partNumber', sum(t1.qty) as 'PlannedQty', '{0}' as 'FinishWhse', t1.flow, t1.lotType, t1.traceCode, t1.lotID, '{1}' as 'On Hand', '{2}' as 'SourceDevice' from mtsdb.tblWorkOrderItem t1 inner join mtsdb.tblWorkOrder t2 on t1.workOrderID = t2.workOrderID left join mtsdb.tblProdLotInfo t3 on t1.lotID = t3.prodLot where t2.workOrder = '{3}' and t1.partNumber = '{4}' and t1.lotID = '{5}' Group by t2.workOrder, t1.partNumber, t2.vendor, t1.flow, t1.lotType, t1.traceCode, t1.lotID Having sum(t1.qty) <= '{6}' or cast(sum(distinct t1.qty) as unsigned) = '{7}'".format(h, f, g, a, b, c, d, d))
 				cursor.execute(query1)
 				result = cursor.fetchone()
 #				print(result)
@@ -257,7 +257,7 @@ def createPRDOTbl ():
 	cursor.close()
 	mysqlcon.close()
 	
-	sapsqlcon = pyodbc.connect('DRIVER={0}; SERVER=10.0.0.6\SAPB1_SQL; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))			
+	sapsqlcon = pyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))			
 	cursor = sapsqlcon.cursor()
 	
 	try:
@@ -347,7 +347,7 @@ def reportCompTbl():
 	mysqlcon.close()
 	
 	
-	sapsqlcon = pyodbc.connect('DRIVER={0}; SERVER=10.0.0.6\SAPB1_SQL; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))			
+	sapsqlcon = pyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))			
 	cursor = sapsqlcon.cursor()
 #####Verify If data should exist in SAP######	
 	print("Verifying Data...")
@@ -630,7 +630,7 @@ def errorEntry1():
 	print("Starting Error Entry Table population....")
 
 	
-	sapsqlcon = pyodbc.connect('DRIVER={0}; SERVER=10.0.0.6\SAPB1_SQL; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))			
+	sapsqlcon = pyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))			
 	cursor = sapsqlcon.cursor()
 		
 	try:
