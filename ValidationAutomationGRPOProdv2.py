@@ -57,7 +57,7 @@ def dataGather():
 ###### Take List of Spinweb data and validate against existing data to determine what should be done with the data #########	
 def dataParse():
 	print ("\n Starting Data Parse...")
-	connection = pypyodbc.connect('DRIVER={0}; SERVER=10.0.0.6\SAPB1_SQL; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
+	connection = pypyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
 	cursor = connection.cursor()
 	
 	try:
@@ -113,7 +113,7 @@ def dataParse():
 #		input()
 		for x in preimportEVS:
 			pw, wlot, rw, qty, ponum, inv = x
-			test1 = ("Select IBT1.BatchNum, IBT1.BsDocEntry, IBT1.BaseEntry, cast(IBT1.Quantity as int) from EverspinTech.dbo.IBT1 WITH(NOLOCK) inner join EverspinTech.dbo.OPOR WITH(NOLOCK) on IBT1.BsDocEntry = OPOR.DocEntry where IBT1.BatchNum = '{0}' and IBT1.BaseType in ('18','20')".format(wlot))
+			test1 = ("Select T2.DistNumber, T1.BaseEntry, T1.DocEntry,  CAST(SUM(T0.Quantity) as int) from EverspinTech.dbo.ITL1 T0 with(nolock) INNER JOIN EverspinTech.dbo.OITL T1 with(nolock) on T0.LogEntry = T1.LogEntry and T1.StockEff =1 INNER JOIN EverspinTech.dbo.OBTN T2 with(nolock) on T0.ItemCode = T2.ItemCode and T0.SysNumber = T2.SysNumber Where T2.DistNumber = '{0}' and T1.DocType in ('18','20') Group By t2.DistNumber, T1.DocEntry, T1.BaseEntry".format(wlot))
 			cursor.execute(test1)
 			testresult = cursor.fetchone()
 #			print(x)
@@ -188,7 +188,7 @@ def dataParse():
 
 def createGRPOTbl ():
 	print("Starting Insert of PRDO Create Data....")
-	sapsqlcon = pypyodbc.connect('DRIVER={0}; SERVER=10.0.0.6\SAPB1_SQL; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))			
+	sapsqlcon = pypyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))			
 	cursor = sapsqlcon.cursor()
 	try:
 		for x in insertSAPCreate:
@@ -217,7 +217,7 @@ def createGRPOTbl ():
 	
 def manualEntry():
 	print("Starting Error Report Insertion...")
-	sapsqlcon = pypyodbc.connect('DRIVER={0}; SERVER=10.0.0.6\SAPB1_SQL; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))			
+	sapsqlcon = pypyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))			
 	cursor = sapsqlcon.cursor()
 	try:
 		for x in manualSAP:
