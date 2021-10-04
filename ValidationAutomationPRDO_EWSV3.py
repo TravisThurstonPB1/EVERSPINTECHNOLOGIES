@@ -54,7 +54,7 @@ def dataGather():
 	
 def dataParse():
 	print ("Starting Data Parse...")
-	connection = pypyodbc.connect('DRIVER={0}; SERVER=10.0.0.6\SAPB1_SQL; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
+	connection = pypyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
 	cursor = connection.cursor()
 	
 	# -- Parse1 List is for Items that should be created.  Parse2 list is for Items that should be reported complete. -- #
@@ -176,7 +176,7 @@ def dataParse():
 		
 		for x in parse1:
 			item, WhsSt, wlot, plot, ewslot, ewsqty, ewswhs, stage, lotstat, shiplot, diecount, shiptowhs = x
-			query = ("Select Ibt1.ItemCode, ibt1.Batchnum, ibt1.BsDocEntry from EverspinTech.dbo.IBT1 with(nolock) where (select OITT.code from EverspinTech.dbo.OITT with(nolock) inner join EverspinTech.dbo.ITT1 with(nolock) on ITT1.Father = OITT.code where ITT1.Code = '{0}') = IBT1.ItemCode and BatchNum = '{1}' and Bsdoctype = 202 and BaseType =59".format(item,ewslot))
+			query = ("Select T0.ItemCode, T2.DistNumber, T1.BaseEntry from EverspinTech.dbo.ITL1 T0 with(nolock) inner join EverspinTech.dbo.OITL T1 with(nolock) on T0.LogEntry = T1.LogEntry and T1.StockEff =1 inner join EverspinTech.dbo.OBTN T2 with(nolock) on T0.ItemCode = T2.ItemCode and T0.SysNumber = T2.SysNumber Where (Select OITT.Code from EverspinTech.dbo.OITT with(nolock) inner join EverspinTech.dbo.ITT1 with(nolock) on Itt1.Father = OITt.Code Where ITT1.Code = '{0}') = T1.ItemCode and T2.DistNumber = '{1}' and T1.BaseType = 202 and T1.DocType = 59".format(item,ewslot))
 			cursor.execute(query)
 			results = cursor.fetchone()
 			# print("results line 78", results)
@@ -185,7 +185,7 @@ def dataParse():
 				# reason = (results[2], results[0], diecount, ewslot, 'EWS Lot has already been processed.   Line 196', '0')
 				# manualSAP.append(reason)
 			else:
-				query1=("select ItemCode, Batchnum, BsDocEntry, OITT.Code, cast(OITT.Qauntity as int) 'Quantity' from EverspinTech.dbo.IBT1 with(nolock) LEFT JOIN (select oitt.Code, Itt1.Code 'CompItem', OITT.Qauntity from EverspinTech.dbo.oitt with(nolock) inner join EverspinTech.dbo.ITT1 with(nolock) on oitt.code = itt1.father) OITT on IBT1.ItemCode = OITT.CompItem where batchnum = '{0}' and ItemCode = '{1}' and BaseType = 60".format(ewslot,item))
+				query1=("Select T0.ItemCode, T2.DistNumber, T1.BaseEntry, OITT.Code, Cast(OITT.Qauntity as int) 'Quantity' from EverspinTech.dbo.ITL1 T0 with(nolock) inner join EverspinTech.dbo.OITL T1 with(nolock) on T0.LogEntry = T1.LogEntry and T1.StockEff =1 inner join EverspinTech.dbo.OBTN T2 with(nolock) on T0.ItemCode = T2.ItemCode and T0.SysNumber = T2.SysNumber LEFT JOIN (select oitt.Code, Itt1.Code 'CompItem', OITT.Qauntity from EverspinTech.dbo.oitt with(nolock) inner join EverspinTech.dbo.ITT1 with(nolock) on oitt.code = itt1.father) OITT on T1.ItemCode = OITt.CompItem Where T2.DistNumber = '{0}' and T0.ItemCode= '{1}' and T1.DocType = 60".format(ewslot,item))
 				cursor.execute(query1)
 				results2 = cursor.fetchone()
 				# print("results2 line 86", results2)
@@ -193,7 +193,7 @@ def dataParse():
 					reason = (results2[2], item, ewsqty, plot, 'Lot has been issued in WIP, status is '+stage+' & '+lotstat+'.  Quantity is '+diecount+'.  line 204', '0')
 					manualSAP.append(reason)
 				else:
-					query2=("select ItemCode, Batchnum, BsDocEntry, OITT.Code, cast(OITT.Qauntity as int) 'Quantity' from EverspinTech.dbo.IBT1 with(nolock) LEFT JOIN (select oitt.Code, Itt1.Code 'CompItem', OITT.Qauntity from EverspinTech.dbo.oitt with(nolock) inner join EverspinTech.dbo.ITT1 with(nolock) on oitt.code = itt1.father) OITT on IBT1.ItemCode = OITT.CompItem where batchnum = '{0}' and ItemCode = '{1}' and BaseType in (59,20)".format(ewslot,item))
+					query2=("Select T0.ItemCode, T2.DistNumber, T1.BaseEntry, OITT.Code, Cast(OITT.Qauntity as int) 'Quantity' from EverspinTech.dbo.ITL1 T0 with(nolock) inner join EverspinTech.dbo.OITL T1 with(nolock) on T0.LogEntry = T1.LogEntry and T1.StockEff =1 inner join EverspinTech.dbo.OBTN T2 with(nolock) on T0.ItemCode = T2.ItemCode and T0.SysNumber = T2.SysNumber LEFT JOIN (select oitt.Code, Itt1.Code 'CompItem', OITT.Qauntity from EverspinTech.dbo.oitt with(nolock) inner join EverspinTech.dbo.ITT1 with(nolock) on oitt.code = itt1.father) OITT on T1.ItemCode = OITt.CompItem Where T2.DistNumber = '{0}' and T0.ItemCode= '{1}' and T1.DocType in (59,20)".format(ewslot,item))
 					cursor.execute(query2)
 					results3 = cursor.fetchone()
 					# print(results3)
@@ -207,7 +207,7 @@ def dataParse():
 		for x in parse2:
 			# print(x)
 			item, WhsSt, wlot, plot, ewslot, ewsqty, ewswhs, stage, lotstat, shiplot, diecount, shiptowhs = x
-			query = ("Select Ibt1.ItemCode, ibt1.Batchnum, ibt1.BsDocEntry from EverspinTech.dbo.IBT1 with(nolock) where (select OITT.code from EverspinTech.dbo.OITT with(nolock) inner join EverspinTech.dbo.ITT1 with(nolock) on ITT1.Father = OITT.code where ITT1.Code = '{0}') = IBT1.ItemCode and BatchNum = '{1}' and Bsdoctype = 202 and BaseType =59".format(item,shiplot))
+			query = ("Select T0.ItemCode, T2.DistNumber, T1.BaseEntry from EverspinTech.dbo.ITL1 T0 with(nolock) inner join EverspinTech.dbo.OITL T1 with(nolock) on T0.LogEntry = T1.LogEntry and T1.StockEff =1 inner join EverspinTech.dbo.OBTN T2 with(nolock) on T0.ItemCode = T2.ItemCode and T0.SysNumber = T2.SysNumber Where (Select OITT.Code from EverspinTech.dbo.OITT with(nolock) inner join EverspinTech.dbo.ITT1 with(nolock) on Itt1.Father = OITt.Code Where ITT1.Code = '{0}') = T1.ItemCode and T2.DistNumber = '{1}' and T1.BaseType = 202 and T1.DocType = 59".format(item,shiplot))
 			cursor.execute(query)
 			results = cursor.fetchone()
 			# print("results line 99", results)
@@ -216,7 +216,7 @@ def dataParse():
 				# reason = (results[2], results[0], diecount, ewslot, 'EWS Lot has already been processed.   Line 227', '0')
 				# manualSAP.append(reason)
 			else:
-				query1=("select ItemCode, Batchnum, BsDocEntry, OITT.Code, cast(OITT.Qauntity as int) 'Quantity' from EverspinTech.dbo.IBT1 with(nolock) LEFT JOIN (select oitt.Code, Itt1.Code 'CompItem', OITT.Qauntity from EverspinTech.dbo.oitt with(nolock) inner join EverspinTech.dbo.ITT1 with(nolock) on oitt.code = itt1.father) OITT on IBT1.ItemCode = OITT.CompItem where batchnum = '{0}' and ItemCode = '{1}' and BaseType = 60 and BsDocType=202 Order by BsDocEntry DESC".format(ewslot,item))
+				query1=("Select T0.ItemCode, T2.DistNumber, T1.BaseEntry, OITT.Code, Cast(OITT.Qauntity as int) 'Quantity' from EverspinTech.dbo.ITL1 T0 with(nolock) inner join EverspinTech.dbo.OITL T1 with(nolock) on T0.LogEntry = T1.LogEntry and T1.StockEff =1 inner join EverspinTech.dbo.OBTN T2 with(nolock) on T0.ItemCode = T2.ItemCode and T0.SysNumber = T2.SysNumber LEFT JOIN (select oitt.Code, Itt1.Code 'CompItem', OITT.Qauntity from EverspinTech.dbo.oitt with(nolock) inner join EverspinTech.dbo.ITT1 with(nolock) on oitt.code = itt1.father) OITT on T1.ItemCode = OITt.CompItem Where T2.DistNumber = '{0}' and T0.ItemCode= '{1}' and T1.DocType = 60 and T1.BaseType=202 Order by T1.BaseEntry DESC".format(ewslot,item))
 				cursor.execute(query1)
 				results2 = cursor.fetchone()
 				# print("results2 line 107", results2)
@@ -234,7 +234,7 @@ def dataParse():
 						insertSAPComp.append(verify)
 					
 				else:
-					query3 = ("select ItemCode, Batchnum, BsDocEntry, OITT.Code, cast(OITT.Qauntity as int) 'Quantity' from EverspinTech.dbo.IBT1 with(nolock) LEFT JOIN (select oitt.Code, Itt1.Code 'CompItem', OITT.Qauntity from EverspinTech.dbo.oitt with(nolock) inner join EverspinTech.dbo.ITT1 with(nolock) on oitt.code = itt1.father) OITT on IBT1.ItemCode = OITT.CompItem where batchnum = '{0}' and ItemCode = '{1}' and BaseType in (59,20)".format(ewslot,item))
+					query3 = ("Select T0.ItemCode, T2.DistNumber, T1.BaseEntry, OITT.Code, Cast(OITT.Qauntity as int) 'Quantity' from EverspinTech.dbo.ITL1 T0 with(nolock) inner join EverspinTech.dbo.OITL T1 with(nolock) on T0.LogEntry = T1.LogEntry and T1.StockEff =1 inner join EverspinTech.dbo.OBTN T2 with(nolock) on T0.ItemCode = T2.ItemCode and T0.SysNumber = T2.SysNumber LEFT JOIN (select oitt.Code, Itt1.Code 'CompItem', OITT.Qauntity from EverspinTech.dbo.oitt with(nolock) inner join EverspinTech.dbo.ITT1 with(nolock) on oitt.code = itt1.father) OITT on T1.ItemCode = OITt.CompItem Where T2.DistNumber = '{0}' and T0.ItemCode= '{1}' and T1.DocType in (59,20)".format(ewslot,item))
 					cursor.execute(query3)
 					result4 = cursor.fetchone()
 					# print("result4 line 123", result4)
@@ -262,7 +262,7 @@ def dataParse():
 
 def createPRDOTbl ():
 	print("Starting PRDO Create Data insert preparation....")
-	connection = pypyodbc.connect('DRIVER={0}; SERVER=10.0.0.6\SAPB1_SQL; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
+	connection = pypyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
 	cursor = connection.cursor()
 		
 		
@@ -335,7 +335,7 @@ def createPRDOTbl ():
 	
 def reportCompTbl():
 	print("Starting Report Complete Data insert preparation....")
-	connection = pypyodbc.connect('DRIVER={0}; SERVER=10.0.0.6\SAPB1_SQL; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
+	connection = pypyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
 	cursor = connection.cursor()
 	
 	try:
@@ -397,7 +397,7 @@ def reportCompTbl():
 	
 def manualEntry():
 	print("Starting Error Report Insertion...")
-	connection = pypyodbc.connect('DRIVER={0}; SERVER=10.0.0.6\SAPB1_SQL; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
+	connection = pypyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
 	cursor = connection.cursor()
 		
 	try:
