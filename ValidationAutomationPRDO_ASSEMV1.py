@@ -95,7 +95,14 @@ def dataParse():
         for x in parse1:
             abi, assylot, ponum, waferlot, ewsitem, finitem, tracecode, lottype, whsstart, whsfinish, startqty, assystqty, shipqty, scrpqty = x
 
-            test2 = ("select owor.DocNum, owor.U_SpinwebNo, owor.U_PONum, owor.ItemCode, owor.PlannedQty, ibt1.Quantity, ibt1.BatchNum, owor.Status from EverspinTech.dbo.OWOR with(nolock) inner join EverspinTech.dbo.IBT1 with(nolock) on OWOR.DocEntry = IBT1.BsDocEntry and IBT1.BsDocType = 202 where owor.U_PONum = '{0}' and ibt1.ItemCode = '{1}' and ibt1.BatchNum ='{2}' and OWOR.Status = 'R' ".format(ponum, finitem, assylot))
+            test2 = ("""Select T3.DocNum, T3.U_SpinwebNo, T3.U_PONum, T3.ItemCode, T3.PlannedQty, T0.Quantity, T2.DistNumber, T3.Status
+
+                    From EverspinTech.dbo.ITL1 T0 with(nolock)
+                    inner join EverspinTech.dbo.OITL T1 with(nolock) on T0.LogEntry = T1.LogEntry and T1.StockEff =1
+                    inner join EverspinTech.dbo.OBTN T2 with(nolock) on T0.ItemCode = T2.ItemCode and T0.SysNumber = T2.SysNumber
+                    LEFT JOIN EverspinTech.dbo.OWOR T3 with(nolock) on T1.BaseEntry = T3.DocEntry and T1.BaseType = 202
+
+                    Where T3.U_PONum = '{0}' and T0.ItemCode = '{1}' and T2.DistNumber = '{2}' and T3.Status = 'R'""".format(ponum, finitem, assylot))
             cursor.execute(test2)
             result = cursor.fetchone()
             if result != None:
@@ -111,7 +118,14 @@ def dataParse():
                     reason = (abi, ponum, finitem, assylot, shipqty, "Greater amount completed in SAP than Spinweb.  Line 103", result[0], '0')
                     manualSAP.append(reason)
             else:
-                test5=("select owor.DocNum, owor.U_SpinwebNo, owor.U_PONum, owor.ItemCode, owor.PlannedQty, ibt1.Quantity 'Quantity', ibt1.BatchNum, owor.Status from EverspinTech.dbo.OWOR with(nolock) inner join EverspinTech.dbo.IBT1 with(nolock) on OWOR.DocEntry = IBT1.BsDocEntry and IBT1.BsDocType = 202  where owor.U_PONum = '{0}' and ibt1.ItemCode = '{1}' and ibt1.BatchNum ='{2}' and ibt1.Quantity = '{3}' and OWOR.Status = 'R'".format(ponum,ewsitem,waferlot,startqty))
+                test5=("""Select T3.DocNum, T3.U_SpinwebNo, T3.U_PONum, T3.ItemCode, T3.PlannedQty, T0.Quantity, T2.DistNumber, T3.Status
+
+                        From EverspinTech.dbo.ITL1 T0 with(nolock)
+                        inner join EverspinTech.dbo.OITL T1 with(nolock) on T0.LogEntry = T1.LogEntry and T1.StockEff =1
+                        inner join EverspinTech.dbo.OBTN T2 with(nolock) on T0.ItemCode = T2.ItemCode and T0.SysNumber = T2.SysNumber
+                        LEFT JOIN EverspinTech.dbo.OWOR T3 with(nolock) on T1.BaseEntry = T3.DocEntry and T1.BaseType = 202
+
+                        Where T3.U_PONum = '{0}' and T0.ItemCode = '{1}' and T2.DistNumber = '{2}' and T3.PlannedQty = '{3}' and T3.Status = 'R'""".format(ponum,ewsitem,waferlot,startqty))
                 cursor.execute(test5)
                 result4 = cursor.fetchone()
                 if result4 != None:
@@ -137,7 +151,15 @@ def dataParse():
         for x in parse3:
             abi, ponum, finitem, startqty, whsfinish, ewsitem, whsstart, waferlot = x
             #			print(x)
-            test4 = ("select owor.DocNum, owor.U_SpinwebNo, owor.U_PONum, owor.ItemCode, owor.PlannedQty, sum(isnull(IGN1.Quantity,0)) 'Quantity', ibt1.BatchNum, owor.Status from EverspinTech.dbo.OWOR with(nolock) inner join EverspinTech.dbo.IBT1 with(nolock) on OWOR.DocEntry = IBT1.BsDocEntry and IBT1.BsDocType = 202 left join EverspinTech.dbo.IGN1 with(nolock) on  OWOR.DocEntry = IGN1.BaseEntry and IGN1.Basetype = 202 where owor.U_PONum = '{0}' and ibt1.ItemCode = '{1}' and ibt1.BatchNum ='{2}' and ibt1.Quantity = '{3}' and OWOR.Status = 'L' group by OWOR.Docnum, U_SpinwebNo, U_PONum, owor.ItemCode, PlannedQty, BatchNum, Status".format(ponum, ewsitem, waferlot, startqty))
+            test4 = ("""Select T3.DocNum, T3.U_SpinwebNo, T3.U_PONum, T3.ItemCode, T3.PlannedQty, SUM(T0.Quantity), T2.DistNumber, T3.Status
+
+                    From EverspinTech.dbo.ITL1 T0 with(nolock)
+                    inner join EverspinTech.dbo.OITL T1 with(nolock) on T0.LogEntry = T1.LogEntry and T1.StockEff =1
+                    inner join EverspinTech.dbo.OBTN T2 with(nolock) on T0.ItemCode = T2.ItemCode and T0.SysNumber = T2.SysNumber
+                    LEFT JOIN EverspinTech.dbo.OWOR T3 with(nolock) on T1.BaseEntry = T3.DocEntry and T1.BaseType = 202
+
+                    Where T3.U_PONum = '{0}' and T0.ItemCode = '{1}' and T2.DistNumber = '{2}' and T3.PlannedQty = '{3}' and T3.Status = 'L'
+                    GROUP BY T3.DocNum, T3.U_SpinwebNo, T3.U_PONum, T3.ItemCode, T3.PlannedQty, T2.DistNumber, T3.Status""".format(ponum, ewsitem, waferlot, startqty))
             cursor.execute(test4)
             result2 = cursor.fetchone()
             if result2 != None:
@@ -145,7 +167,15 @@ def dataParse():
                 # reason = (abi, ponum, finitem, waferlot, startqty, "Assembly Lot has already been processed.  Line 134", result2[0], '0')
                 # manualSAP.append(reason)
             else:
-                test3 = ("Select S0.ItemCode, S0.BatchNum 'SAP Lot', S0.WhsCode, isnull(S0.InQty,0)-isnull(S1.OutQty,0) 'OnHand' From (select ItemCode, Batchnum, whscode, sum(quantity) 'InQty' from EverspinTech.dbo.IBT1 with(nolock) where BaseType in (59,67,18,20,16,15,14,10000071) and Direction=0 AND Docdate <= convert(date, getdate(),112) group by ItemCode, BatchNum, WhsCode) S0 left Join (select Distinct ItemCode, BatchNum, WhsCode, sum(quantity) 'OutQty' from EverspinTech.dbo.IBT1 with(nolock) where BaseType in (60,67,19,21,15,10000071) and Direction=1 and DocDate <= convert(date, getdate(),112) Group by ItemCode, BatchNum, WhsCode) S1 on S0.ItemCode = S1.ItemCode and S0.BatchNum = S1.BatchNum and S0.WhsCode = S1.WhsCode Where isnull(S0.inqty,0) - isnull(s1.OutQty,0) <> 0 and S0.BatchNum = '{0}' and S0.ItemCode = '{1}'".format(waferlot, ewsitem))
+                test3 = ("""Select T0.ItemCode, T2.DistNumber, T1.LocCode, SUM(T0.Quantity) 'OnHand'
+
+                        From EverspinTech.dbo.ITL1 T0 with(nolock)
+                        inner join EverspinTech.dbo.OITL T1 with(nolock) on T0.LogEntry = T1.LogEntry and T1.StockEff =1
+                        inner join EverspinTech.dbo.OBTN T2 with(nolock) on T0.ItemCode = T2.ItemCode and T0.SysNumber = T2.SysNumber
+
+                        Where T2.DistNumber = '{0}' and T0.ItemCode = '{1}' 
+                        GROUP BY T0.ItemCode, T2.DistNumber, T1.LocCode
+                        HAVING SUM(T0.Quantity)<>0""".format(waferlot, ewsitem))
                 cursor.execute(test3)
                 result3 = cursor.fetchone()
                 if result3 != None:
@@ -339,6 +369,7 @@ dataParse()
 createPRDOTbl()
 reportCompTbl()
 manualEntry()
+
 
 
 
