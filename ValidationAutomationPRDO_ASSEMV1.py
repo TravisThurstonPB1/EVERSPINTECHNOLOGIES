@@ -180,11 +180,26 @@ def dataParse():
                 result3 = cursor.fetchone()
                 if result3 != None:
                     if result3[3] >= startqty:
-                        getitem=("Select ItemCode from OITM with(nolock) where ItemCode = '{0}'".format(finitem))
-                        cursor.execute(getitem)
-                        getitemcode = cursor.fetchone()
-                        verify = (abi, ponum, getitemcode[0], startqty, whsfinish, ewsitem, result3[2], waferlot) 
-                        insertSAPCreate.append(verify)
+                        if finitem == 'Bobcat16TS-ASY':
+                            planqty = startqty / 2
+                            getitem=("Select ItemCode from OITM with(nolock) where ItemCode = '{0}'".format(finitem))
+                            cursor.execute(getitem)
+                            getitemcode = cursor.fetchone()
+                            verify = (abi, ponum, getitemcode[0], startqty, whsfinish, ewsitem, result3[2], waferlot, planqty) 
+                            insertSAPCreate.append(verify)
+                        elif finitem == 'Bobcat16BG-ASY':
+                            planqty = startqty / 2
+                            getitem=("Select ItemCode from OITM with(nolock) where ItemCode = '{0}'".format(finitem))
+                            cursor.execute(getitem)
+                            getitemcode = cursor.fetchone()
+                            verify = (abi, ponum, getitemcode[0], startqty, whsfinish, ewsitem, result3[2], waferlot, planqty) 
+                            insertSAPCreate.append(verify)
+                        else:
+                            getitem=("Select ItemCode from OITM with(nolock) where ItemCode = '{0}'".format(finitem))
+                            cursor.execute(getitem)
+                            getitemcode = cursor.fetchone()
+                            verify = (abi, ponum, getitemcode[0], startqty, whsfinish, ewsitem, result3[2], waferlot) 
+                            insertSAPCreate.append(verify)
                     else:
                         reason = (abi, ponum, ewsitem, waferlot, startqty, "Not Enough Quantity On Hand in SAP, cannot create PRDO.  Line 145", '0', '0')
                         manualSAP.append(reason)
@@ -369,6 +384,8 @@ dataParse()
 createPRDOTbl()
 reportCompTbl()
 manualEntry()
+
+
 
 
 
