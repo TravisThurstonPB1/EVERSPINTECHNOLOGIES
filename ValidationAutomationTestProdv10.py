@@ -155,7 +155,7 @@ def dataParse2():
                     reason = (x[0], x[1], x[2], x[3], 'PRDO Exists, but Lot Number/ItemCode pair in Spinweb does not match Lot Number/ItemCode pair in SAP.  Line 133 Query Result.', testresult3[0])
                     manualSAPnonexist.append(reason)
         else:
-            test8=("Select '' 'spinweb', '' 'baseentry', '' 'planned', T1.ItemCode, T2.Distnumber, Cast(T2.Notes as nvarchar) 'Notes', T4.WhsCode, Cast(Sum(T0.Quantity) as INT) 'OnHand',  '' 'docentry' from EverspinTech.dbo.ITL1 T0 with(nolock) Inner join EverspinTech.dbo.OITL T1 with(nolock) on T0.Logentry = T1.LogEntry and T1.Stockeff = 1 Inner join EverspinTech.dbo.OBTN T2 with(nolock) on T0.Sysnumber = T2.Sysnumber and T0.ItemCode = T2.ItemCode Inner join EverspinTech.dbo.OWOR T3 with(nolock) on T1.BaseEntry = T3.DocEntry inner Join EverspinTech.dbo.OBTQ T4 with(nolock) on T2.AbsEntry = T4.MDAbsEntry Where T2.DistNumber = '{0}' and T4.Quantity <> 0 Group by T2.DistNumber, T4.WhsCode, Cast(T2.Notes as nvarchar), T1.ItemCode Having Sum(T0.Quantity) <> 0".format(x[2]))
+            test8=("Select '' 'spinweb', '' 'baseentry', '' 'planned', T1.ItemCode, T2.Distnumber, Cast(T2.Notes as nvarchar) 'Notes', T4.WhsCode, Cast(Sum(T0.Quantity) as INT) 'OnHand',  '' 'docentry' from EverspinTech.dbo.ITL1 T0 with(nolock) Inner join EverspinTech.dbo.OITL T1 with(nolock) on T0.Logentry = T1.LogEntry and T1.Stockeff = 1 Inner join EverspinTech.dbo.OBTN T2 with(nolock) on T0.Sysnumber = T2.Sysnumber and T0.ItemCode = T2.ItemCode inner Join EverspinTech.dbo.OBTQ T4 with(nolock) on T2.AbsEntry = T4.MDAbsEntry Where T2.DistNumber = '{0}' and T4.Quantity <> 0 Group by T2.DistNumber, T4.WhsCode, Cast(T2.Notes as nvarchar), T1.ItemCode Having Sum(T0.Quantity) <> 0".format(x[2]))
             cursor2.execute(test8)
             testresult7 = cursor2.fetchone()
             if testresult7 != None:
@@ -226,7 +226,7 @@ def createPRDOTbl ():
 		if importSAP != False:
 			for x in importSAP:
 				a, b, c, d, e, f, g, h = x
-				query1 = ("select distinct t2.workOrder, '0' as PONumber, Case When t1.partNumber = 'CONDORTS' then 'CondorTS' when t1.partNumber = 'LYNX16TS' then 'Lynx16TS' when t1.partNumber = 'PANTHER16TS' then 'Panther16TS' When t1.partNumber = 'PANTHER16BG' then 'Panther16BG' when t1.partNumber = 'LYNX16BG' then 'Lynx16BG' when t1.partNumber = 'CONDORBG' then 'CondorBG' when t1.partNumber = 'CONDORDV' then 'CondorDV' else t1.partNumber end 'partNumber', sum(t1.qty) as 'PlannedQty', '{0}' as 'FinishWhse', t1.flow, t1.lotType, t1.traceCode, t1.lotID, '{1}' as 'On Hand', '{2}' as 'SourceDevice' from mtsdb.tblWorkOrderItem t1 inner join mtsdb.tblWorkOrder t2 on t1.workOrderID = t2.workOrderID left join mtsdb.tblProdLotInfo t3 on t1.lotID = t3.prodLot where t2.workOrder = '{3}' and t1.partNumber = '{4}' and t1.lotID = '{5}' Group by t2.workOrder, t1.partNumber, t2.vendor, t1.flow, t1.lotType, t1.traceCode, t1.lotID Having sum(t1.qty) <= '{6}' or cast(sum(distinct t1.qty) as unsigned) = '{7}'".format(h, f, g, a, b, c, d, d))
+				query1 = ("select distinct t2.workOrder, '0' as PONumber, Case When t1.partNumber = 'CONDORTS' then 'CondorTS' when t1.partNumber = 'LYNX16TS' then 'Lynx16TS' when t1.partNumber = 'PANTHER16TS' then 'Panther16TS' When t1.partNumber = 'PANTHER16BG' then 'Panther16BG' when t1.partNumber = 'LYNX16BG' then 'Lynx16BG' when t1.partNumber = 'CONDORBG' then 'CondorBG' when t1.partNumber = 'CONDORDV' then 'CondorDV' When t1.partNumber = 'LYNX08TS' then 'Lynx08TS' when t1.partNumber = 'LYNX08BG' then 'Lynx08BG' else t1.partNumber end 'partNumber', sum(t1.qty) as 'PlannedQty', '{0}' as 'FinishWhse', t1.flow, t1.lotType, t1.traceCode, t1.lotID, '{1}' as 'On Hand', '{2}' as 'SourceDevice' from mtsdb.tblWorkOrderItem t1 inner join mtsdb.tblWorkOrder t2 on t1.workOrderID = t2.workOrderID left join mtsdb.tblProdLotInfo t3 on t1.lotID = t3.prodLot where t2.workOrder = '{3}' and t1.partNumber = '{4}' and t1.lotID = '{5}' Group by t2.workOrder, t1.partNumber, t2.vendor, t1.flow, t1.lotType, t1.traceCode, t1.lotID Having sum(t1.qty) <= '{6}' or cast(sum(distinct t1.qty) as unsigned) = '{7}'".format(h, f, g, a, b, c, d, d))
 				cursor.execute(query1)
 				result = cursor.fetchone()
 #				print(result)
@@ -699,5 +699,6 @@ dataParse2()
 createPRDOTbl()
 reportCompTbl()
 errorEntry1()
+
 
 
