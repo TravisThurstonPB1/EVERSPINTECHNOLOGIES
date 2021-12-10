@@ -40,24 +40,43 @@ try:
 	sub_ledger = pd.read_excel(open(file_sub_ledget, 'rb'),dtype={'Selection Date':datetime.date,'AsOfDate':datetime.date})
 	sub_ledger = sub_ledger.replace(np.nan, '', regex=True)
 except FileNotFoundError:
-	print(file_sub_ledget + " file is not found.")
+	print(file_sub_ledget + " file is required.")
 	print("Automation process stopped!")
 	exit(0)
 
-FAB_promise = pd.read_excel(open(file_FAB_promise, 'rb'))
-FAB_promise = FAB_promise.replace(np.nan, '', regex=True)
+try:
+	FAB_promise = pd.read_excel(file_FAB_promise, None)
+	FAB_promise = pd.read_excel(open(file_FAB_promise, 'rb'))
+	FAB_promise = FAB_promise.replace(np.nan, '', regex=True)
+except FileNotFoundError:
+	print(file_FAB_promise + " file is required.")
+	print("Automation process stopped!")
+	exit(0)
 
-MRAM_lab = pd.read_excel(open(file_MRAM_LAB, 'rb'))
-MRAM_lab = MRAM_lab.replace(np.nan, '', regex=True)
+try:
+	MRAM_lab = pd.read_excel(file_MRAM_LAB, None)
+	MRAM_lab = pd.read_excel(open(file_MRAM_LAB, 'rb'))
+	MRAM_lab = MRAM_lab.replace(np.nan, '', regex=True)
+except FileNotFoundError:
+	print(file_MRAM_LAB + " file is required.")
+	print("Automation process stopped!")
+	exit(0)
 
 
 ### ASY WIP FILES ####
-ASY_Amkor = pd.read_excel(open(file_ASY_Amkor, 'rb'))
-ASY_Amkor = ASY_Amkor.replace(np.nan, '', regex=True)
+try:
+	ASY_Amkor = pd.read_excel(file_ASY_Amkor, None)
+	ASY_Amkor = pd.read_excel(open(file_ASY_Amkor, 'rb'))
+	ASY_Amkor = ASY_Amkor.replace(np.nan, '', regex=True)
+except FileNotFoundError:
+	pass
 
-CHM_Assy_WIP = pd.read_excel(open(file_CHM_Assy_WIP, 'rb'))
-CHM_Assy_WIP = CHM_Assy_WIP.replace(np.nan, '', regex=True)
-
+try:
+	CHM_Assy_WIP = pd.read_excel(file_CHM_Assy_WIP, None)
+	CHM_Assy_WIP = pd.read_excel(open(file_CHM_Assy_WIP, 'rb'))
+	CHM_Assy_WIP = CHM_Assy_WIP.replace(np.nan, '', regex=True)
+except FileNotFoundError:
+	pass
 
 
 try:
@@ -68,9 +87,12 @@ except FileNotFoundError:
 	pass
 	# print(file_CHM_CP_WIP + " file is not found.")		
 
-
-CHM_Assy_Inv = pd.read_excel(open(file_CHM_Assy_Inv, 'rb'))
-CHM_Assy_Inv = CHM_Assy_Inv.replace(np.nan, '', regex=True)
+try:
+	CHM_Assy_Inv = pd.read_excel(file_CHM_Assy_Inv, None)
+	CHM_Assy_Inv = pd.read_excel(open(file_CHM_Assy_Inv, 'rb'))
+	CHM_Assy_Inv = CHM_Assy_Inv.replace(np.nan, '', regex=True)
+except FileNotFoundError:
+	pass
 
 ######################## IMPORTANT NOTE: HERE WE HAVE TO PASS SHEET NAME   ###################################### 
 try:
@@ -81,24 +103,46 @@ except FileNotFoundError:
 	print(file_Daily_WIP_UDG + " file is not found.")
 #################################################################################################################
 
-OSE_WIP = pd.read_excel(open(file_OSE_WIP, 'rb'))
-OSE_WIP = OSE_WIP.replace(np.nan, '', regex=True)
+try:
+	OSE_WIP = pd.read_excel(file_OSE_WIP, None)
+	OSE_WIP = pd.read_excel(open(file_OSE_WIP, 'rb'))
+	OSE_WIP = OSE_WIP.replace(np.nan, '', regex=True)
+except FileNotFoundError:
+	pass
 
-UTC_EVERSPIN_AssyWIP = pd.read_excel(open(file_UTC_Everspin_AssyWIP, 'rb'))
-UTC_EVERSPIN_AssyWIP = UTC_EVERSPIN_AssyWIP.replace(np.nan, '', regex=True)
+try:
+	UTC_EVERSPIN_AssyWIP = pd.read_excel(file_UTC_Everspin_AssyWIP, None)
+	UTC_EVERSPIN_AssyWIP = pd.read_excel(open(file_UTC_Everspin_AssyWIP, 'rb'))
+	UTC_EVERSPIN_AssyWIP = UTC_EVERSPIN_AssyWIP.replace(np.nan, '', regex=True)
+except FileNotFoundError:
+	pass
 
-UTL_Assy = pd.read_excel(open(file_UTL_Assy, 'rb'))
-UTL_Assy = UTL_Assy.replace(np.nan, '', regex=True)
+try:
+	UTL_Assy = pd.read_excel(file_UTL_Assy, None)
+	UTL_Assy = pd.read_excel(open(file_UTL_Assy, 'rb'))
+	UTL_Assy = UTL_Assy.replace(np.nan, '', regex=True)
+except FileNotFoundError:
+	pass
 
 ######################### UTC TAB ###############################################
-UTC_Tab_Sheet1 = pd.read_excel(open(file_UTC_WIP_report, 'rb'))
-UTC_Tab_Sheet1 = UTC_Tab_Sheet1.replace(np.nan, '', regex=True)
+try:
+	UTC_Tab_Sheet1 = pd.read_excel(file_UTC_WIP_report, None)
+	UTC_Tab_Sheet1 = pd.read_excel(open(file_UTC_WIP_report, 'rb'))
+	UTC_Tab_Sheet1 = UTC_Tab_Sheet1.replace(np.nan, '', regex=True)
+except FileNotFoundError:
+	pass
 
-
-UTC_Tab_Sheet2 = pd.read_excel(file_UTC_WIP_report, None)
-if 'UTC Key' in UTC_Tab_Sheet2.keys():
-	UTC_Tab_Sheet2 = pd.read_excel(open(file_UTC_WIP_report, 'rb'),sheet_name="UTC Key")
-else:
+try:
+	UTC_Tab_Sheet2 = pd.read_excel(file_UTC_WIP_report, None)
+	if 'UTC Key' in UTC_Tab_Sheet2.keys():
+		UTC_Tab_Sheet2 = pd.read_excel(open(file_UTC_WIP_report, 'rb'),sheet_name="UTC Key")
+	else:
+		try:
+			UTC_Tab_Sheet2 = pd.read_excel(open('UTC Key.xlsx', 'rb'))
+		except error:
+			print("UTC Key.xlsx file is required to run.")
+			exit(0)
+except FileNotFoundError:
 	try:
 		UTC_Tab_Sheet2 = pd.read_excel(open('UTC Key.xlsx', 'rb'))
 	except error:
@@ -323,56 +367,70 @@ ws_asy_WIP['F1'] = "Subledger Qty"
 ws_asy_WIP['G1'] = "Diff Qty"
 
 
-Amkor_ASY_count = 1
-for r in dataframe_to_rows(ASY_Amkor, index=False, header=True):
-	if Amkor_ASY_count == 1 and r[0] == "Customer Number":
-		Amkor_ASY_count = Amkor_ASY_count + 1
-	elif Amkor_ASY_count > 1 and r[4] == "P3" and not(r[13].startswith("ES")) and r[13] != "":
-		def checkQty(r):
-			r = str(r)
-			r = r.replace(" ", "")
-			if r.isnumeric():
-				return int(r)
-			else:
-				return r
-		ws_asy_WIP['A'+str(Amkor_ASY_count)] = r[13] # PartID
-		ws_asy_WIP['B'+str(Amkor_ASY_count)] = r[15] # LotID
-		ws_asy_WIP['C'+str(Amkor_ASY_count)] = r[16] # ParentLot
-		ws_asy_WIP['D'+str(Amkor_ASY_count)] = checkQty(r[62]) # Qty
-		ws_asy_WIP['E'+str(Amkor_ASY_count)] = "Amkor" # Location
-		ws_asy_WIP['F'+str(Amkor_ASY_count)] = "=IFERROR(VLOOKUP(B"+str(Amkor_ASY_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(Amkor_ASY_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
-		ws_asy_WIP['G'+str(Amkor_ASY_count)] = "=D"+str(Amkor_ASY_count)+"-F"+str(Amkor_ASY_count)+""
-		Amkor_ASY_count = Amkor_ASY_count + 1
+try:
+	Amkor_ASY_count = 1
+	for r in dataframe_to_rows(ASY_Amkor, index=False, header=True):
+		if Amkor_ASY_count == 1 and r[0] == "Customer Number":
+			Amkor_ASY_count = Amkor_ASY_count + 1
+		elif Amkor_ASY_count > 1 and r[4] == "P3" and not(r[13].startswith("ES")) and r[13] != "":
+			def checkQty(r):
+				r = str(r)
+				r = r.replace(" ", "")
+				if r.isnumeric():
+					return int(r)
+				else:
+					return r
+			ws_asy_WIP['A'+str(Amkor_ASY_count)] = r[13] # PartID
+			ws_asy_WIP['B'+str(Amkor_ASY_count)] = r[15] # LotID
+			ws_asy_WIP['C'+str(Amkor_ASY_count)] = r[16] # ParentLot
+			ws_asy_WIP['D'+str(Amkor_ASY_count)] = checkQty(r[62]) # Qty
+			ws_asy_WIP['E'+str(Amkor_ASY_count)] = "Amkor" # Location
+			ws_asy_WIP['F'+str(Amkor_ASY_count)] = "=IFERROR(VLOOKUP(B"+str(Amkor_ASY_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(Amkor_ASY_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
+			ws_asy_WIP['G'+str(Amkor_ASY_count)] = "=D"+str(Amkor_ASY_count)+"-F"+str(Amkor_ASY_count)+""
+			Amkor_ASY_count = Amkor_ASY_count + 1
+except NameError:
+	Amkor_ASY_count = 2
+	pass
 
 CHM_Assy_WIP_count = 0
-for r in dataframe_to_rows(CHM_Assy_WIP, index=False, header=True):
-	if CHM_Assy_WIP_count == 0 and r[0] == "Customer":
-		CHM_Assy_WIP_count = Amkor_ASY_count
-	elif CHM_Assy_WIP_count > 1 and r[5] != ""  and  not(r[5].startswith("ES")):
-		if r[0] == "PACKAGE-ID":
-			break
-		def checkQty(r):
-			row13 = str(r[13])
-			if row13 and row13.isnumeric():
-				return r[13]
-			else:
-				total = 0
-				for index in range(14,24): # Taking column from O to X from xl file.
-					r[index] = r[index].replace(" ", "")
-					r[index] = str(r[index])
-					if r[index].isnumeric():
-						total = total + int(r[index])	
-				return total
-		
-		ws_asy_WIP['A'+str(CHM_Assy_WIP_count)] = r[5] # PartID
-		ws_asy_WIP['B'+str(CHM_Assy_WIP_count)] = r[6] # LotID
-		ws_asy_WIP['C'+str(CHM_Assy_WIP_count)] = "" # ParentLot
-		ws_asy_WIP['D'+str(CHM_Assy_WIP_count)] = checkQty(r) # Qty
-		ws_asy_WIP['E'+str(CHM_Assy_WIP_count)] = "CHM Assy WIP" # Location
-		ws_asy_WIP['F'+str(CHM_Assy_WIP_count)] = "=IFERROR(VLOOKUP(B"+str(CHM_Assy_WIP_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(CHM_Assy_WIP_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
-		ws_asy_WIP['G'+str(CHM_Assy_WIP_count)] = "=D"+str(CHM_Assy_WIP_count)+"-F"+str(CHM_Assy_WIP_count)+""
-		CHM_Assy_WIP_count = CHM_Assy_WIP_count + 1
-	
+try:
+	for r in dataframe_to_rows(CHM_Assy_WIP, index=False, header=True):
+		if CHM_Assy_WIP_count == 0 and r[0] == "Customer":
+			CHM_Assy_WIP_count = Amkor_ASY_count
+		elif CHM_Assy_WIP_count > 1 and r[5] != ""  and  not(r[5].startswith("ES")):
+			if r[0] == "PACKAGE-ID":
+				break
+			def checkQty(r):
+				row12 = str(r[12].replace(" ",""))
+				row13 = str(r[13].replace(" ",""))
+				row24 = str(r[24].replace(" ",""))
+
+				if row24 and row24.isnumeric():
+					return int(row24)
+				elif row13 and row13.isnumeric():
+					return int(row13)
+				elif row12 and row12.isnumeric():
+					return int(row12)
+				else:
+					total = 0
+					# for index in range(14,24): # Taking column from O to X from xl file.
+					# 	r[index] = r[index].replace(" ", "")
+					# 	r[index] = str(r[index])
+					# 	if r[index].isnumeric():
+					# 		total = total + int(r[index])	
+					return total
+			
+			ws_asy_WIP['A'+str(CHM_Assy_WIP_count)] = r[5] # PartID
+			ws_asy_WIP['B'+str(CHM_Assy_WIP_count)] = r[6] # LotID
+			ws_asy_WIP['C'+str(CHM_Assy_WIP_count)] = "" # ParentLot
+			ws_asy_WIP['D'+str(CHM_Assy_WIP_count)] = checkQty(r) # Qty
+			ws_asy_WIP['E'+str(CHM_Assy_WIP_count)] = "CHM Assy WIP" # Location
+			ws_asy_WIP['F'+str(CHM_Assy_WIP_count)] = "=IFERROR(VLOOKUP(B"+str(CHM_Assy_WIP_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(CHM_Assy_WIP_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
+			ws_asy_WIP['G'+str(CHM_Assy_WIP_count)] = "=D"+str(CHM_Assy_WIP_count)+"-F"+str(CHM_Assy_WIP_count)+""
+			CHM_Assy_WIP_count = CHM_Assy_WIP_count + 1
+except NameError:
+	CHM_Assy_WIP_count = Amkor_ASY_count
+	pass	
 
 try:
 	CHM_CP_WIP_count = 0
@@ -400,25 +458,29 @@ except NameError:
 	pass
 
 CHM_Assy_Inv_count = 0
-for r in dataframe_to_rows(CHM_Assy_Inv, index=False, header=True):
-	if CHM_Assy_Inv_count == 0 and r[0] == "PART_NO":
-		CHM_Assy_Inv_count = CHM_CP_WIP_count
-	elif CHM_Assy_Inv_count > 1 and r[0] != ""  and  not(r[0].startswith("ES")):
-		def checkQty(r):
-			r = str(r)
-			r = r.replace(" ", "")
-			if r.isnumeric():
-				return int(r)
-			else:
-				return r
-		ws_asy_WIP['A'+str(CHM_Assy_Inv_count)] = r[0] # PartID
-		ws_asy_WIP['B'+str(CHM_Assy_Inv_count)] = r[2] # LotID
-		ws_asy_WIP['C'+str(CHM_Assy_Inv_count)] = "" # ParentLot
-		ws_asy_WIP['D'+str(CHM_Assy_Inv_count)] = checkQty(r[5]) # Qty
-		ws_asy_WIP['E'+str(CHM_Assy_Inv_count)] = "CHM_Assy_Inv" # Location
-		ws_asy_WIP['F'+str(CHM_Assy_Inv_count)] = "=IFERROR(VLOOKUP(B"+str(CHM_Assy_Inv_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(CHM_Assy_Inv_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
-		ws_asy_WIP['G'+str(CHM_Assy_Inv_count)] = "=D"+str(CHM_Assy_Inv_count)+"-F"+str(CHM_Assy_Inv_count)+""
-		CHM_Assy_Inv_count = CHM_Assy_Inv_count + 1
+try:
+	for r in dataframe_to_rows(CHM_Assy_Inv, index=False, header=True):
+		if CHM_Assy_Inv_count == 0 and r[0] == "PART_NO":
+			CHM_Assy_Inv_count = CHM_CP_WIP_count
+		elif CHM_Assy_Inv_count > 1 and r[0] != ""  and  not(r[0].startswith("ES")):
+			def checkQty(r):
+				r = str(r)
+				r = r.replace(" ", "")
+				if r.isnumeric():
+					return int(r)
+				else:
+					return r
+			ws_asy_WIP['A'+str(CHM_Assy_Inv_count)] = r[0] # PartID
+			ws_asy_WIP['B'+str(CHM_Assy_Inv_count)] = r[2] # LotID
+			ws_asy_WIP['C'+str(CHM_Assy_Inv_count)] = "" # ParentLot
+			ws_asy_WIP['D'+str(CHM_Assy_Inv_count)] = checkQty(r[5]) # Qty
+			ws_asy_WIP['E'+str(CHM_Assy_Inv_count)] = "CHM_Assy_Inv" # Location
+			ws_asy_WIP['F'+str(CHM_Assy_Inv_count)] = "=IFERROR(VLOOKUP(B"+str(CHM_Assy_Inv_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(CHM_Assy_Inv_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
+			ws_asy_WIP['G'+str(CHM_Assy_Inv_count)] = "=D"+str(CHM_Assy_Inv_count)+"-F"+str(CHM_Assy_Inv_count)+""
+			CHM_Assy_Inv_count = CHM_Assy_Inv_count + 1
+except NameError:
+	CHM_Assy_Inv_count = CHM_CP_WIP_count
+	pass
 
 try:
 	DAILY_WIP_UDG_count = 0
@@ -457,76 +519,87 @@ except NameError:
 	pass
 
 OSE_WIP_count = 0
-for r in dataframe_to_rows(OSE_WIP, index=False, header=True):
-	if OSE_WIP_count == 0 and r[1] == "DEVICE":
-		OSE_WIP_count = DAILY_WIP_UDG_count
-	elif OSE_WIP_count > 1 and r[1] != "" and not(r[1].startswith("ES")):
-		def checkQty(r):
-			total = 0
-			for index in range(14,29): # Taking column from O to AC from xl file.
-				r[index] = str(r[index])
-				r[index] = r[index].replace(" ", "")
-				if r[index].isnumeric():
-					total = total + int(r[index])
-			if total > 0:
-				return total
-			else:
-				r[12] = str(r[12])
-				if r[12].isnumeric() and int(r[12]) > 0:
-					return int(r[12])
+try:
+	for r in dataframe_to_rows(OSE_WIP, index=False, header=True):
+		if OSE_WIP_count == 0 and r[1] == "DEVICE":
+			OSE_WIP_count = DAILY_WIP_UDG_count
+		elif OSE_WIP_count > 1 and r[1] != "" and not(r[1].startswith("ES")):
+			def checkQty(r):
+				total = 0
+				for index in range(14,29): # Taking column from O to AC from xl file.
+					r[index] = str(r[index])
+					r[index] = r[index].replace(" ", "")
+					if r[index].isnumeric():
+						total = total + int(r[index])
+				if total > 0:
+					return total
 				else:
-					return int(r[8])
-		ws_asy_WIP['A'+str(OSE_WIP_count)] = r[1] # PartID
-		ws_asy_WIP['B'+str(OSE_WIP_count)] = r[6] # LotID
-		ws_asy_WIP['C'+str(OSE_WIP_count)] = "" # ParentLot
-		ws_asy_WIP['D'+str(OSE_WIP_count)] = checkQty(r) # Qty
-		ws_asy_WIP['E'+str(OSE_WIP_count)] = "OSE_WIP" # Location
-		ws_asy_WIP['F'+str(OSE_WIP_count)] = "=IFERROR(VLOOKUP(B"+str(OSE_WIP_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(OSE_WIP_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
-		ws_asy_WIP['G'+str(OSE_WIP_count)] = "=D"+str(OSE_WIP_count)+"-F"+str(OSE_WIP_count)+""
-		OSE_WIP_count = OSE_WIP_count + 1
-
+					r[12] = str(r[12])
+					if r[12].isnumeric() and int(r[12]) > 0:
+						return int(r[12])
+					else:
+						return int(r[8])
+			ws_asy_WIP['A'+str(OSE_WIP_count)] = r[1] # PartID
+			ws_asy_WIP['B'+str(OSE_WIP_count)] = r[6] # LotID
+			ws_asy_WIP['C'+str(OSE_WIP_count)] = "" # ParentLot
+			ws_asy_WIP['D'+str(OSE_WIP_count)] = checkQty(r) # Qty
+			ws_asy_WIP['E'+str(OSE_WIP_count)] = "OSE_WIP" # Location
+			ws_asy_WIP['F'+str(OSE_WIP_count)] = "=IFERROR(VLOOKUP(B"+str(OSE_WIP_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(OSE_WIP_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
+			ws_asy_WIP['G'+str(OSE_WIP_count)] = "=D"+str(OSE_WIP_count)+"-F"+str(OSE_WIP_count)+""
+			OSE_WIP_count = OSE_WIP_count + 1
+except NameError:
+	OSE_WIP_count = DAILY_WIP_UDG_count
+	pass
 
 UTC_EVERSPIN_AssyWIP_count = 0
-for r in dataframe_to_rows(UTC_EVERSPIN_AssyWIP, index=False, header=True):
-	if UTC_EVERSPIN_AssyWIP_count == 0 and r[4] == "DEVICE_PN":
-		UTC_EVERSPIN_AssyWIP_count = OSE_WIP_count
-	elif UTC_EVERSPIN_AssyWIP_count > 1 and r[4] != "":
-		def checkQty(r):
-			r = str(r)
-			r = r.replace(" ", "")
-			if r.isnumeric():
-				return int(r)
-			else:
-				return r
-		ws_asy_WIP['A'+str(UTC_EVERSPIN_AssyWIP_count)] = r[4] # PartID
-		ws_asy_WIP['B'+str(UTC_EVERSPIN_AssyWIP_count)] = r[12] # LotID
-		ws_asy_WIP['C'+str(UTC_EVERSPIN_AssyWIP_count)] = "" # ParentLot
-		ws_asy_WIP['D'+str(UTC_EVERSPIN_AssyWIP_count)] = checkQty(r[11]) # Qty
-		ws_asy_WIP['E'+str(UTC_EVERSPIN_AssyWIP_count)] = "UTC_EVERSPIN_AssyWIP" # Location
-		ws_asy_WIP['F'+str(UTC_EVERSPIN_AssyWIP_count)] = "=IFERROR(VLOOKUP(B"+str(UTC_EVERSPIN_AssyWIP_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(UTC_EVERSPIN_AssyWIP_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
-		ws_asy_WIP['G'+str(UTC_EVERSPIN_AssyWIP_count)] = "=D"+str(UTC_EVERSPIN_AssyWIP_count)+"-F"+str(UTC_EVERSPIN_AssyWIP_count)+""
-		UTC_EVERSPIN_AssyWIP_count = UTC_EVERSPIN_AssyWIP_count + 1
+try:
+	for r in dataframe_to_rows(UTC_EVERSPIN_AssyWIP, index=False, header=True):
+		if UTC_EVERSPIN_AssyWIP_count == 0 and r[4] == "DEVICE_PN":
+			UTC_EVERSPIN_AssyWIP_count = OSE_WIP_count
+		elif UTC_EVERSPIN_AssyWIP_count > 1 and r[4] != "":
+			def checkQty(r):
+				r = str(r)
+				r = r.replace(" ", "")
+				if r.isnumeric():
+					return int(r)
+				else:
+					return r
+			ws_asy_WIP['A'+str(UTC_EVERSPIN_AssyWIP_count)] = r[4] # PartID
+			ws_asy_WIP['B'+str(UTC_EVERSPIN_AssyWIP_count)] = r[12] # LotID
+			ws_asy_WIP['C'+str(UTC_EVERSPIN_AssyWIP_count)] = "" # ParentLot
+			ws_asy_WIP['D'+str(UTC_EVERSPIN_AssyWIP_count)] = checkQty(r[11]) # Qty
+			ws_asy_WIP['E'+str(UTC_EVERSPIN_AssyWIP_count)] = "UTC_EVERSPIN_AssyWIP" # Location
+			ws_asy_WIP['F'+str(UTC_EVERSPIN_AssyWIP_count)] = "=IFERROR(VLOOKUP(B"+str(UTC_EVERSPIN_AssyWIP_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(UTC_EVERSPIN_AssyWIP_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
+			ws_asy_WIP['G'+str(UTC_EVERSPIN_AssyWIP_count)] = "=D"+str(UTC_EVERSPIN_AssyWIP_count)+"-F"+str(UTC_EVERSPIN_AssyWIP_count)+""
+			UTC_EVERSPIN_AssyWIP_count = UTC_EVERSPIN_AssyWIP_count + 1
+except NameError:
+	UTC_EVERSPIN_AssyWIP_count = OSE_WIP_count
+	pass
 
 UTL_Assy_count = 0
-for r in dataframe_to_rows(UTL_Assy, index=False, header=True):
-	if UTL_Assy_count == 0 and r[1] == "Product No":
-		UTL_Assy_count = UTC_EVERSPIN_AssyWIP_count
-	elif UTL_Assy_count > 1 and r[1] != "" and not(r[1].startswith("ES")) and r[6] != "" and not(r[6].startswith("--")):
-		def checkQty(r):
-			r = str(r)
-			r = r.replace(" ", "")
-			if r.isnumeric():
-				return int(r)
-			else:
-				return r
-		ws_asy_WIP['A'+str(UTL_Assy_count)] = r[1] # PartID
-		ws_asy_WIP['B'+str(UTL_Assy_count)] = r[6] # LotID
-		ws_asy_WIP['C'+str(UTL_Assy_count)] = "" # ParentLot
-		ws_asy_WIP['D'+str(UTL_Assy_count)] = checkQty(r[34]) # Qty
-		ws_asy_WIP['E'+str(UTL_Assy_count)] = "UTL_Assy" # Location
-		ws_asy_WIP['F'+str(UTL_Assy_count)] = "=IFERROR(VLOOKUP(B"+str(UTL_Assy_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(UTL_Assy_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
-		ws_asy_WIP['G'+str(UTL_Assy_count)] = "=D"+str(UTL_Assy_count)+"-F"+str(UTL_Assy_count)+""
-		UTL_Assy_count = UTL_Assy_count + 1
+try:
+	for r in dataframe_to_rows(UTL_Assy, index=False, header=True):
+		if UTL_Assy_count == 0 and r[1] == "Product No":
+			UTL_Assy_count = UTC_EVERSPIN_AssyWIP_count
+		elif UTL_Assy_count > 1 and r[1] != "" and not(r[1].startswith("ES")) and r[6] != "" and not(r[6].startswith("--")):
+			def checkQty(r):
+				r = str(r)
+				r = r.replace(" ", "")
+				if r.isnumeric():
+					return int(r)
+				else:
+					return r
+			ws_asy_WIP['A'+str(UTL_Assy_count)] = r[1] # PartID
+			ws_asy_WIP['B'+str(UTL_Assy_count)] = r[6] # LotID
+			ws_asy_WIP['C'+str(UTL_Assy_count)] = "" # ParentLot
+			ws_asy_WIP['D'+str(UTL_Assy_count)] = checkQty(r[34]) # Qty
+			ws_asy_WIP['E'+str(UTL_Assy_count)] = "UTL_Assy" # Location
+			ws_asy_WIP['F'+str(UTL_Assy_count)] = "=IFERROR(VLOOKUP(B"+str(UTL_Assy_count)+",'Subledger Recon'!F:K,6,FALSE),IFERROR(VLOOKUP(C"+str(UTL_Assy_count)+",'Subledger Recon'!F:K,6,FALSE),""))"
+			ws_asy_WIP['G'+str(UTL_Assy_count)] = "=D"+str(UTL_Assy_count)+"-F"+str(UTL_Assy_count)+""
+			UTL_Assy_count = UTL_Assy_count + 1
+except NameError:
+	UTL_Assy_count = UTC_EVERSPIN_AssyWIP_count
+	pass
 
 ws_asy_WIP['A'+str(UTL_Assy_count)] = "Total"
 ws_asy_WIP['D'+str(UTL_Assy_count)] = "=SUM(D2:D"+str(UTL_Assy_count-1)+")"
@@ -553,32 +626,34 @@ Location.pop(0)
 # initialize list of lists
 data = {'PartID':partID, 'LotID':LotID, 'ParentLot':ParentLot, 'Qty': Qty, 'Location':Location}
 assembly_df = pd.DataFrame(data)
-table = pd.pivot_table(assembly_df, values=['Qty'], index=['Location','PartID','LotID','ParentLot'],
+
+table = pd.pivot_table(assembly_df, values=['Qty'], index=['Location','LotID'],
                     aggfunc=np.sum, margins=False, margins_name='Total')
 
+# print(table)
 
-row = 2 # Start from this row number
-col = 5 # Column 3 total sum of Qty
+row = 3 # Start from this row number
+col = 3 # Column 3 total sum of Qty
 col1 = 1 # Column 1 for Location
-col2 = 2 # Column 2 for PartID
-col3 = 3 # Column 2 for LotID
-col4 = 4 # Column 2 for ParentLot
+# col2 = 2 # Column 2 for PartID
+col3 = 2 # Column 2 for LotID
+# col4 = 4 # Column 2 for ParentLot
 data = table.values
 index = table.index
 max_row, max_col = data.shape
 for r in range(max_row):
    for c in range(max_col):
 	   ws_asy_pivot['A2'] = 'Location'
-	   ws_asy_pivot['B2'] = 'PartID/WaferFamily'
-	   ws_asy_pivot['C2'] = 'LotID'
-	   ws_asy_pivot['D2'] = 'ParentLot'
-	   ws_asy_pivot['E2'] = 'Qty'
+	   ws_asy_pivot['B2'] = 'LotID'
+	   ws_asy_pivot['C2'] = 'Qty'
+	#    ws_asy_pivot['D2'] = 'ParentLot'
+	#    ws_asy_pivot['E2'] = 'Qty'
 	   try:
 		   ws_asy_pivot[get_column_letter(col+c)+str(row+r)] = data[r][c]
 		   ws_asy_pivot[get_column_letter(col1+c)+str(row+r)] = index[r][0]
-		   ws_asy_pivot[get_column_letter(col2+c)+str(row+r)] = index[r][1]
-		   ws_asy_pivot[get_column_letter(col3+c)+str(row+r)] = index[r][2]
-		   ws_asy_pivot[get_column_letter(col4+c)+str(row+r)] = index[r][3]
+		#    ws_asy_pivot[get_column_letter(col2+c)+str(row+r)] = index[r][1]
+		   ws_asy_pivot[get_column_letter(col3+c)+str(row+r)] = index[r][1]
+		#    ws_asy_pivot[get_column_letter(col4+c)+str(row+r)] = index[r][3]
 	   except:
 		   ws_asy_pivot[get_column_letter(col+c)+str(row+r)] = data[r][c]
 		   ws_asy_pivot[get_column_letter(col1+c)+str(row+r)] = index[r][0]
@@ -935,7 +1010,11 @@ else:
     month = x.month
 
 wb.save('output - '+ str(x.day)+'-'+ str(month)+'-'+ str(x.year) +'.xlsx')
+# wb.save('output - '+ str(30)+'-'+ str('09')+'-'+ str(x.year) +'.xlsx')
+# print('output - '+ str(30)+'-'+ str('09')+'-'+ str(x.year) +'.xlsx')
 print("Process Done!")
+
+
 
 
 
