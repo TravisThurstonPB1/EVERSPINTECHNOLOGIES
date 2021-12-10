@@ -27,10 +27,12 @@ else:
     month = date.month
 
 date_folder = str(date.strftime('%d'))+str(month)+str(date.year)+"/"
+# date_folder = str(30)+str('09')+str(date.year)+"/"
 folder_in_sharepoint = folder_in_sharepoint+date_folder
 
 # Output file with todays date.
 output_xlsx = 'output - '+str(date.day)+'-'+str(month)+'-'+str(date.year)+'.xlsx'
+# output_xlsx = 'output - '+str(30)+'-'+str('09')+'-'+str(date.year)+'.xlsx'
 
 def delete_downloaded_files():
     if os.path.exists("UTC Key.xlsx"):
