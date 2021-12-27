@@ -191,14 +191,18 @@ def reportcomp():
         cursor.execute(query1)
         result1 = cursor.fetchone()
         
-        if result1 == None:
+        if result1 != None:
+            if result1[3] == 0:
+                query3=("""UPDATE VALIDATION.dbo.REPORT_COMP_TR SET CompQty = '{0}', CredQty = '{1}', ScrapQty = '{2}' WHERE TransID = '{3}'""".format(compqty, credqty, scrapqty, result1[0]))
+                cursor.execute(query3)
+            else:
+                pass
+        else:
             query2=("""Insert Into VALIDATION.dbo.REPORT_COMP_TR
                     (SpinwebABI, SAPPRDONo, CompQty, CredQty, ScrapQty, ParentLotNo, NewLotNo, WhseFinish, ItemCodeStart, ItemCodeFinish, byprodAdd)
                     values
                     ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}', 'N')""".format(workorder, prdo, compqty, credqty, scrapqty, credlot, finlot, 'T_UTC', startitem, finitem))
             cursor.execute(query2)
-        else:
-            pass
     
     
     print("Completed insert of records into {0} Database Report comp table".format('VALIDATION'))
