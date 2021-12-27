@@ -315,7 +315,7 @@ for r in dataframe_to_rows(sub_ledger, index=False, header=True):
 	if ws_sub_ledger_recon_count > 1:
 		ws_sub_ledger_recon['R'+str(ws_sub_ledger_recon_count)] = "=IFERROR(VLOOKUP(F"+str(ws_sub_ledger_recon_count)+",'FAB Pivot'!A:C,3,FALSE),IFERROR(VLOOKUP(F"+str(ws_sub_ledger_recon_count)+",'FAB Pivot'!B:C,2,FALSE),"'""'"))"
 		ws_sub_ledger_recon['S'+str(ws_sub_ledger_recon_count)] = "=IFERROR(VLOOKUP(F"+str(ws_sub_ledger_recon_count)+",'MRAM Pivot'!B:D,3,FALSE),IFERROR(VLOOKUP(F"+str(ws_sub_ledger_recon_count)+",'MRAM Pivot'!C:D,2,FALSE),"'""'"))"
-		ws_sub_ledger_recon['T'+str(ws_sub_ledger_recon_count)] = "=IFERROR(VLOOKUP(F"+str(ws_sub_ledger_recon_count)+",'Asy Pivot'!C:E,3,FALSE),IFERROR(VLOOKUP(F"+str(ws_sub_ledger_recon_count)+",'Asy Pivot'!D:E,2,FALSE),"'""'"))"
+		ws_sub_ledger_recon['T'+str(ws_sub_ledger_recon_count)] = "=IFERROR(VLOOKUP(F"+str(ws_sub_ledger_recon_count)+",'Asy Pivot'!B:C,2,FALSE),IFERROR(VLOOKUP(F"+str(ws_sub_ledger_recon_count)+",'Asy Pivot'!B:C,2,FALSE),"'""'"))"
 		ws_sub_ledger_recon['U'+str(ws_sub_ledger_recon_count)] = "=IFERROR(VLOOKUP(F"+str(ws_sub_ledger_recon_count)+",'UTC Pivot'!A:B,2,FALSE),IFERROR(VLOOKUP(F"+str(ws_sub_ledger_recon_count)+",'UTC Pivot'!D:F,3,FALSE),IFERROR(VLOOKUP(F"+str(ws_sub_ledger_recon_count)+",'UTC Pivot'!I:J,2,FALSE),IFERROR(VLOOKUP(F"+str(ws_sub_ledger_recon_count)+",'UTC Pivot'!L:M,2,FALSE),"'""'"))))"
 		ws_sub_ledger_recon['V'+str(ws_sub_ledger_recon_count)] = "=SUM(R"+str(ws_sub_ledger_recon_count)+":U"+str(ws_sub_ledger_recon_count)+")"
 		ws_sub_ledger_recon['W'+str(ws_sub_ledger_recon_count)] = "=+K"+str(ws_sub_ledger_recon_count)+"-V"+str(ws_sub_ledger_recon_count)
