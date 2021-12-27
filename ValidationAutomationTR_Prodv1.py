@@ -44,7 +44,7 @@ def datagather():
                 from mtsdb.tblWorkOrderTR T0
                 inner join mtsdb.tblWorkOrderTRItem T1 on T0.workOrder = T1.workOrder
 
-                Where T0.workWeek >= '2151' and T0.startDate between DATE_ADD(CURDATE(), INTERVAL -60 day) and CURDATE()
+                Where T0.workWeek >= '2151' and T0.startDate between DATE_ADD(CURDATE(), INTERVAL -60 day) and DATE_ADD(CURDATE(), INTERVAL 1 day)
 
                 GROUP BY T0.workOrder, T0.orderType, T0.startDate, T0.completeDate, T0.shipDate
                 , T0.targetDevice, T1.sourceDevice,  T0.targetLotId, T0.creditLotID, T1.sourceLotID
@@ -214,17 +214,21 @@ def errortable():
     for x in manerror:
         workorder, item, lot, qty, errreason, prdo = x
         query2 = ("""Select * from VALIDATION.dbo.ERROR_ENTRY_TR
-                    WHERE workOrder = '{0}' and ItemCode = '{1}' and LotNo = '{2}' and Qty = '{3}' and ErrorReason = '{4}'""".format(workorder, item, lot, qty, errreason))
+                    WHERE workOrder = '{0}' and ItemCode = '{1}' and LotNo = '{2}'""".format(workorder, item, lot))
         cursor.execute(query2)
         result = cursor.fetchone()
-        if result == None:
+        if result != None:
+            if errreason.lower() == result[1].lower():
+                pass
+            else:
+                query3=("""UPDATE VALIDATION.dbo.ERROR_ENTRY_TR SET ErrorReason = '{0}', Qty = '{1}' WHERE TransID = '{2}'""".format(errreason, qty, result[0]))
+                cursor.execute(query3)
+        else:
             query1 = ("""Insert Into VALIDATION.dbo.ERROR_ENTRY_TR
                         (workOrder, ItemCode, LotNo, Qty, ErrorReason, PRDONo, CreateDate)
                         values
                         ('{0}','{1}','{2}','{3}','{4}','{5}', GETDATE())""".format(workorder, item, lot, qty, errreason, prdo))
             cursor.execute(query1)
-        else:
-            pass
         
     print("Completed insert of records into {0} Database Error Table".format('VALIDATION'))
     cursor.commit()
