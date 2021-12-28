@@ -23,6 +23,10 @@ processerror = []
 processcreate = []
 processcomp = []
 byprod = []
+## -- Added these lists 12/28/2021 for Active Byproduct handling -- ##
+byprod_active = []
+byprod_active_update = []
+## ---------------------------------------------------------------- ##
 
 logindict = {"UserName": username, "Password": password, "CompanyDB": "EverspinTech"}
 x = requests.post('https://everspinsap2:50000/b1s/v1/Login', json=logindict, verify=False)
@@ -102,8 +106,14 @@ def parse():
                 
                 if result2 != None:
                     if status.lower() == 'active':
-                        errreason = (workorder, finitem, finlot, compqty, "TR work order is currently Active and not Complete.  Did not process receipt of Production", result2[0])
-                        manerror.append(errreason)
+                        ## -- Added Code 12/28/2021 for Active Byproduct handling -- ##
+                        if credqty > 0:
+                            byprodactive = (workorder, result2[0], startitem, credlot, credqty)
+                            byprod_active.append(byprodactive)
+                        ## --------------------------------------------------------- ##
+                        else:
+                            errreason = (workorder, finitem, finlot, compqty, "TR work order is currently Active and not Complete.  Did not process receipt of Production", result2[0])
+                            manerror.append(errreason)
                     elif status.lower() == 'complete':
                         tocomplete = (workorder, result2[0], finitem, startitem, finlot, credlot, compqty, credqty, scrapqty)
                         sapcomp.append(tocomplete)
@@ -172,6 +182,35 @@ def createPRDO():
     
     
     print("Completed insert of records to {0} Database Create PRDO table".format('VALIDATION'))
+    cursor.commit()
+    cursor.close()
+    connection.close()
+    
+## -- Added code 12/28/2021 for Active Byproduct handling -- ##
+def byProd_Active():
+    print("Starting process for byproduct active on order in SAP...")
+    connection = pyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EVS_TR_TEST; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
+    cursor = connection.cursor()
+    
+    byprod_active2 = list(set(byprod_active))
+    
+    for x in byprod_active2:
+        workorder, prdo, startitem, credlot, credqty = x
+        query1 = ("""Select * from TEST_VALIDATION.dbo.BY_PROD_ACTIVE_TR
+                    Where workOrder = '{0}' and CreditLot = '{1}'""".format(workorder, credlot))
+                    
+        cursor.execute(query1)
+        result1 = cursor.fetchone()
+        
+        if result1 != None:
+            pass
+        else:
+            query2=("""Insert Into TEST_VALIDATION.dbo.BY_PROD_ACTIVE_TR
+                        (workOrder, SAPPRDONo, CreditItem, CreditLot, CreditQty) Values
+                        ('{0}', '{1}', '{2}', '{3}', '{4}')""".format(workorder, prdo, startitem, credlot, credqty))
+            cursor.execute(query2)
+    
+    print("Completed insert of records into {0} Database ByProduct Active table".format('TEST_VALIDATION'))
     cursor.commit()
     cursor.close()
     connection.close()
@@ -413,6 +452,57 @@ def byproduct_updateSAP():
         query2 = ("""UPDATE VALIDATION.dbo.REPORT_COMP_TR SET byprodAdd = 'Y' WHERE SpinwebABI = '{0}'""".format(x))
         cursor.execute(query2)
         
+    ## -- Added Code 12/28/2021 for Active By Product Handling -- ##
+    byprod.clear()
+    
+    query3 = ("""Select workOrder, SAPPRDONo, CreditItem, CreditQty, CreditLot 
+            , (Select Top 1 WOR1.OcrCode2 from EVS_TR_TEST.dbo.WOR1 where WOR1.DocEntry = SAPPRDONo) 'Fam'
+            , MAX(WOR1.LineNum) + 1 'LineNum'
+            from TEST_VALIDATION.dbo.BY_PROD_ACTIVE_TR with(nolock)
+            INNER JOIN EVS_TR_TEST.dbo.WOR1 with(nolock) on BY_PROD_ACTIVE_TR.SAPPRDOno  = WOR1.DocEntry
+			WHERE byprodAdd = 'N'
+            GROUP by workOrder, SAPPRDONo, CreditItem, CreditQty, CreditLot""")
+    cursor.execute(query3)
+    result2 = cursor.fetchone()
+    
+    
+    while result2:
+        planqty = result2[3]*-1
+        
+        woheader["AbsoluteEntry"]=result2[1]
+        wolines.append({"DocumentAbsoluteEntry": result2[1],
+                        "LineNumber": result2[6],
+                        "ItemNo": result2[2],
+                        "PlannedQuantity": planqty,
+                        "ItemType": "pit_Item",
+                        "DistributionRule2": result2[5],
+                        "Warehouse": 'T_UTC',
+                        "ProductionOrderIssueType": "im_Manual"})
+        woheader["ProductionOrderLines"]=wolines
+        
+
+        try:
+            crprdo = requests.patch("https://everspinsap2:50000/b1s/v1/ProductionOrders({0})".format(result2[1]), json=woheader, cookies=logcookies, verify=False)
+            # print(crprdo.json())
+            if crprdo.status_code not in httpsuccess:
+                createPRDOerror = (result2[0], result2[2], result2[4], result2[3], crprdo.json()["error"]["message"]["value"], result2[1])
+                processerror.append(createPRDOerror)
+            else:
+                byprod.append(result2[0])
+        except:
+            raise
+            
+        woheader.clear()
+        wolines.clear()
+        
+        result2 = cursor.fetchone()
+        
+    for x in byprod:
+        # print(x)
+        query4 = ("""UPDATE TEST_VALIDATION.dbo.BY_PROD_ACTIVE_TR Set byprodAdd = 'Y' WHERE SpinwebABI = '{0}'""".format(x))
+        cursor.execute(query4)
+    ## ----------------------------------------------------------- ##
+        
     cursor.commit()    
     cursor.close()
     connection.close()
@@ -421,6 +511,7 @@ def receipt_inSAP():
     print("Starting process for Receipt of Production in SAP from Validation Data...")
     connection = pyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
     cursor = connection.cursor()
+    cursor2 = connection.cursor()  ## -- Added code 12/28/2021 for Active byproduct handling -- ##
     
     query1=("""Select T0.SpinwebABI, T0.SAPPRDONo, T0.CompQty, T0.CredQty, T0.ScrapQty, T0.ParentlotNo, T0.NewLotNo, T0.WhseFinish, T0.ItemCodeStart, T0.ItemCodeFinish
             , CAST(T1.StockPrice as float) 'StockPrice', Cast(T2.Notes as nvarchar) 'Notes', Max(T3.Linenum) 'LineNum'
@@ -440,50 +531,93 @@ def receipt_inSAP():
     
     while result1:
     
-        receiptheader={}
-        receiptlines=[]
-        receiptbacthes=[]
-        
-        receiptheader["Comments"]="PIO Auto TR Process Via ServiceLayer"
-        receiptlines.append({"BaseEntry": result1[1],
-                            "BaseType": "202",
-                            "Quantity": result1[2],
-                            "U_PRDOScrap": result1[4]})
-        receiptlines.append({"BaseEntry": result1[1],
-                            "BaseType": "202",
-                            "TreeType": "iNotATree",
-                            "BaseLine": result1[12],
-                            "UnitPrice": result1[10],
-                            "Quantity": result1[3]})
-        receiptbacthes.append({"BatchNumber": result1[6],
-                            "Notes": result1[5],
-                            "Quantity": result1[2],
-                            "ItemCode": result1[9]})
-        receiptbacthes.append({"BatchNumber": result1[5],
-                            "Notes": result1[11],
-                            "Quantity": result1[3],
-                            "ItemCode": result1[8]})
-        receiptlines[0]["BatchNumbers"]=[receiptbacthes[0]]
-        receiptlines[1]["BatchNumbers"]=[receiptbacthes[1]]
-        receiptheader["DocumentLines"]=receiptlines
-        
-        # print(receiptbacthes[0])
-        # print(receiptbacthes[1])
-        
-        # print(receiptheader)
-        
-        try:
-            woreceipt = requests.post("https://everspinsap2:50000/b1s/v1/InventoryGenEntries", json=receiptheader, cookies=logcookies, verify=False)
-            # print(woreceipt.json())
-            if woreceipt.status_code in httpsuccess:
-                processcomp.append(result1[0])
-            else:
-                createPRDOerror = (result1[0], result1[9], result1[6], result1[2], woreceipt.json()["error"]["message"]["value"], result1[1])
-                processerror.append(createPRDOerror)
-        except:
-            raise
-        
-        result1 = cursor.fetchone()
+        ## -- Added Code 12/28/2021 for Active Byproduct Handling -- ##
+        query6 = ("""Select * from TEST_VALIDATION.dbo.BY_PROD_ACTIVE_TR Where byprodAdd = 'Y' and receiptDone = 'N' and SAPPRDONo = '{0}'""".format(result1[1]))
+        cursor2.execute(query6)
+        result3 = cursor2.fetchone()
+        if result3 == None:
+        ## --------------------------------------------------------- ##
+    
+            receiptheader={}
+            receiptlines=[]
+            receiptbacthes=[]
+            
+            receiptheader["Comments"]="PIO Auto TR Process Via ServiceLayer"
+            receiptlines.append({"BaseEntry": result1[1],
+                                "BaseType": "202",
+                                "Quantity": result1[2],
+                                "U_PRDOScrap": result1[4]})
+            receiptlines.append({"BaseEntry": result1[1],
+                                "BaseType": "202",
+                                "TreeType": "iNotATree",
+                                "BaseLine": result1[12],
+                                "UnitPrice": result1[10],
+                                "Quantity": result1[3]})
+            receiptbacthes.append({"BatchNumber": result1[6],
+                                "Notes": result1[5],
+                                "Quantity": result1[2],
+                                "ItemCode": result1[9]})
+            receiptbacthes.append({"BatchNumber": result1[5],
+                                "Notes": result1[11],
+                                "Quantity": result1[3],
+                                "ItemCode": result1[8]})
+            receiptlines[0]["BatchNumbers"]=[receiptbacthes[0]]
+            receiptlines[1]["BatchNumbers"]=[receiptbacthes[1]]
+            receiptheader["DocumentLines"]=receiptlines
+            
+            # print(receiptbacthes[0])
+            # print(receiptbacthes[1])
+            
+            # print(receiptheader)
+            
+            try:
+                woreceipt = requests.post("https://everspinsap2:50000/b1s/v1/InventoryGenEntries", json=receiptheader, cookies=logcookies, verify=False)
+                # print(woreceipt.json())
+                if woreceipt.status_code in httpsuccess:
+                    processcomp.append(result1[0])
+                else:
+                    createPRDOerror = (result1[0], result1[9], result1[6], result1[2], woreceipt.json()["error"]["message"]["value"], result1[1])
+                    processerror.append(createPRDOerror)
+            except:
+                raise
+            
+            result1 = cursor.fetchone()    
+        ## -- Added Code 12/28/2021 for Active Byproduct Handling -- ##
+        else:
+            receiptheader={}
+            receiptlines=[]
+            receiptbacthes=[]
+            
+            receiptheader["Comments"]="PIO Auto TR Process Via ServiceLayer"
+            receiptlines.append({"BaseEntry": result1[1],
+                                "BaseType": "202",
+                                "Quantity": result1[2],
+                                "U_PRDOScrap": result1[4]})
+            receiptbacthes.append({"BatchNumber": result1[6],
+                                "Notes": result1[5],
+                                "Quantity": result1[2],
+                                "ItemCode": result1[9]})
+            receiptlines[0]["BatchNumbers"]= receiptbacthes
+            receiptheader["DocumentLines"]=receiptlines
+            
+            # print(receiptbacthes[0])
+            # print(receiptbacthes[1])
+            
+            # print(receiptheader)
+            
+            try:
+                woreceipt = requests.post("https://everspinsap2:50000/b1s/v1/InventoryGenEntries", json=receiptheader, cookies=logcookies, verify=False)
+                # print(woreceipt.json())
+                if woreceipt.status_code in httpsuccess:
+                    processcomp.append(result1[0])
+                else:
+                    createPRDOerror = (result1[0], result1[9], result1[6], result1[2], woreceipt.json()["error"]["message"]["value"], result1[1])
+                    processerror.append(createPRDOerror)
+            except:
+                raise
+            
+            result1 = cursor.fetchone()
+        ## ------------------------------------------------------- ##
     
     for x in processcomp:
         query2 = ("""INSERT into VALIDATION.dbo.PROCESSED_REPORT_COMP_TR
@@ -494,10 +628,64 @@ def receipt_inSAP():
         
         query3 = ("""DELETE FROM VALIDATION.dbo.REPORT_COMP_TR WHERE SpinwebABI = '{0}'""".format(x))
         cursor.execute(query3)
+        
+    ## -- Added code 12/28/2021 Receipt of Credit Lot on Active Production -- ##
+    query4 = ("""Select workOrder, SAPPRDONo, CreditItem, CreditQty, CreditLot 
+            , (Select Top 1 WOR1.OcrCode2 from EVS_TR_TEST.dbo.WOR1 where WOR1.DocEntry = SAPPRDONo) 'Fam'
+            , MAX(WOR1.LineNum) 'LineNum', CAST(T1.StockPrice as float) 'StockPrice', CAST(T2.Notes as nvarchar) 'Notes'
+            from TEST_VALIDATION.dbo.BY_PROD_ACTIVE_TR with(nolock)
+            INNER JOIN EVS_TR_TEST.dbo.WOR1 with(nolock) on BY_PROD_ACTIVE_TR.SAPPRDOno  = WOR1.DocEntry
+			Inner Join EVS_TR_TEST.dbo.IGE1 T1 with(nolock) on SAPPRDONo = T1.BaseEntry and T1.BaseType = 202 and T1.ItemType = 4
+			INNER JOIN EVS_TR_TEST.dbo.OBTN T2 with(nolock) on CreditItem collate database_default = T2.ItemCode collate database_default 
+            and CreditLot collate database_default = T2.DistNumber collate database_default
+			WHERE byprodAdd = 'Y' and receiptDone = 'N'
+            GROUP by workOrder, SAPPRDONo, CreditItem, CreditQty, CreditLot, T1.StockPrice, CAST(T2.Notes as nvarchar)""")
+    cursor.execute(query4)
+    result2 = cursor.fetchone()
+    
+    while result2:
+        receiptheader={}
+        receiptlines=[]
+        receiptbacthes=[]
+        
+        receiptheader["Comments"]="PIO Auto TR Process Via ServiceLayer"
+        receiptlines.append({"BaseEntry": result2[1],
+                            "BaseType": "202",
+                            "TreeType": "iNotATree",
+                            "BaseLine": result2[6],
+                            "UnitPrice": result2[7],
+                            "Quantity": result2[3]})
+        receiptbacthes.append({"BatchNumber": result2[4],
+                            "Notes": result2[8],
+                            "Quantity": result2[3],
+                            "ItemCode": result2[2]})
+        receiptlines[0]["BatchNumbers"]=receiptbacthes
+        receiptheader["DocumentLines"]=receiptlines
+        
+        # print(receiptheader)
+        
+        try:
+            woreceipt = requests.post("https://everspinsap2:50000/b1s/v1/InventoryGenEntries", json=receiptheader, cookies=logcookies, verify=False)
+            # print(woreceipt.json())
+            if woreceipt.status_code in httpsuccess:
+                byprod_active_update.append(result2[0])
+            else:
+                createPRDOerror = (result2[0], result2[2], result2[4], result2[3], woreceipt.json()["error"]["message"]["value"], result2[1])
+                processerror.append(createPRDOerror)
+        except:
+            raise
+        
+        result2 = cursor.fetchone()
+        
+    for x in byprod_active_update:
+        query5 = ("""UPDATE TEST_VALIDATION.dbo.BY_PROD_ACTIVE_TR Set receiptDone = 'Y', receiptDate = GETDATE()""")
+        cursor.execute(query5)
+    ## ----------------------------------------------------------------------- ##
     
     print("Completed Receipt from Production")
     cursor.commit()
     cursor.close()
+    cursor2.close()  ## -- Added Code 12/28/2021 for active byproduct handling -- ##
     connection.close()
     
 
@@ -563,10 +751,28 @@ def process_Error():
 datagather()
 parse()
 createPRDO()
+byProd_Active()  ## -- Added 12/28/2021 -- ##
 reportcomp()
 errortable()
 
 ## -- Start Production Order processing in SAP -- ##
+
+createPRDO_inSAP()
+byproduct_updateSAP()
+receipt_inSAP()
+close_PRDO()
+process_Error()
+
+## -- Second round run -- ##
+
+datagather()
+parse()
+createPRDO()
+byProd_Active()  ## -- Added 12/28/2021 -- ##
+reportcomp()
+errortable()
+
+## -- Start Production Order processing in SAP second run -- ##
 
 createPRDO_inSAP()
 byproduct_updateSAP()
