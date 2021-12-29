@@ -510,8 +510,9 @@ def byproduct_updateSAP():
 def receipt_inSAP():
     print("Starting process for Receipt of Production in SAP from Validation Data...")
     connection = pyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
+    connection2 = pyodbc.connect('DRIVER={0}; SERVER=EverspinSQL2\SAPB1_SQL02; DATABASE=EverspinTech; UID={1}; PWD={2}'.format('SQL Server',mysqllogin.mssql_user, mysqllogin.mssql_pass))
     cursor = connection.cursor()
-    cursor2 = connection.cursor()  ## -- Added code 12/28/2021 for Active byproduct handling -- ##
+    cursor2 = connection2.cursor()  ## -- Added code 12/28/2021 for Active byproduct handling -- ##
     
     query1=("""Select T0.SpinwebABI, T0.SAPPRDONo, T0.CompQty, T0.CredQty, T0.ScrapQty, T0.ParentlotNo, T0.NewLotNo, T0.WhseFinish, T0.ItemCodeStart, T0.ItemCodeFinish
             , CAST(T1.StockPrice as float) 'StockPrice', Cast(T2.Notes as nvarchar) 'Notes', Max(T3.Linenum) 'LineNum'
@@ -687,6 +688,7 @@ def receipt_inSAP():
     cursor.close()
     cursor2.close()  ## -- Added Code 12/28/2021 for active byproduct handling -- ##
     connection.close()
+    connection2.close()
     
 
 def close_PRDO():
@@ -762,6 +764,20 @@ byproduct_updateSAP()
 receipt_inSAP()
 close_PRDO()
 process_Error()
+
+## -- Added 12/28/2021 Clear lists for Second round run -- ##
+
+spinwebdata.clear()
+sapimport.clear()
+sapcomp.clear()
+manerror.clear()
+success_create_prdo.clear()
+processerror.clear()
+processcreate.clear()
+processcomp.clear()
+byprod.clear()
+byprod_active.clear()
+byprod_active_update.clear()
 
 ## -- Second round run -- ##
 
