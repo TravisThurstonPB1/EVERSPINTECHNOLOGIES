@@ -225,23 +225,39 @@ def reportcomp():
     for x in sapcomp2:
         # print(x)
         workorder, prdo, finitem, startitem, finlot, credlot, compqty, credqty, scrapqty = x
-        query1 = ("""Select * from VALIDATION.dbo.REPORT_COMP_TR
-                    Where SpinwebABI = '{0}' and NewLotNo = '{1}'""".format(workorder, finlot))
+        query1 = ("""Select T0.TransID, T0.SpinwebABI, T0.SAPPRDONo, T0.CompQty, ISNULL(T1.byprodAdd,'E') 'byprodAdd' 
+					from VALIDATION.dbo.REPORT_COMP_TR T0
+					LEFT JOIN VALIDATION.dbo.BY_PROD_ACTIVE_TR T1 on T0.SpinwebABI = T1.workOrder and T0.SAPPRDONo = T1.SAPPRDONo
+                    Where T0.SpinwebABI = '{0}' and T0.NewLotNo = '{1}'""".format(workorder, finlot))
         cursor.execute(query1)
         result1 = cursor.fetchone()
-        
+
         if result1 != None:
             if result1[3] == 0:
-                query3=("""UPDATE VALIDATION.dbo.REPORT_COMP_TR SET CompQty = '{0}', CredQty = '{1}', ScrapQty = '{2}' WHERE TransID = '{3}'""".format(compqty, credqty, scrapqty, result1[0]))
-                cursor.execute(query3)
+                if result1[4] == 'E':
+                    query3=("""UPDATE VALIDATION.dbo.REPORT_COMP_TR SET CompQty = '{0}', CredQty = '{1}', ScrapQty = '{2}' WHERE TransID = '{3}'""".format(compqty, credqty, scrapqty, result1[0]))
+                    cursor.execute(query3)
+                else:
+                    query7 = ("""UPDATE VALIDATION.dbo.REPORT_COMP_TR SET CompQty = '{0}', CredQty = '{1}', ScrapQty = '{2}', byprodAdd = 'Y' WHERE TransID = '{3}'""".format(compqty, credqty, scrapqty, result1[0]))
+                    cursor.execute(query7)
             else:
                 pass
         else:
-            query2=("""Insert Into VALIDATION.dbo.REPORT_COMP_TR
-                    (SpinwebABI, SAPPRDONo, CompQty, CredQty, ScrapQty, ParentLotNo, NewLotNo, WhseFinish, ItemCodeStart, ItemCodeFinish, byprodAdd)
-                    values
-                    ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}', 'N')""".format(workorder, prdo, compqty, credqty, scrapqty, credlot, finlot, 'T_UTC', startitem, finitem))
-            cursor.execute(query2)
+            query8=("""Select * from VALIDATION.dbo.BY_PROD_ACTIVE_TR where workOrder = '{0}' and SAPPRDONo = '{1}'""".format(workorder,prdo))
+            cursor.execute(query8)
+            result2 = cursor.fetchone()
+            if result2 != None:
+                query9=("""Insert Into VALIDATION.dbo.REPORT_COMP_TR
+                        (SpinwebABI, SAPPRDONo, CompQty, CredQty, ScrapQty, ParentLotNo, NewLotNo, WhseFinish, ItemCodeStart, ItemCodeFinish, byprodAdd)
+                        values
+                        ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}', 'Y')""".format(workorder, prdo, compqty, credqty, scrapqty, credlot, finlot, 'T_UTC', startitem, finitem))
+                cursor.execute(query9)
+            else:
+                query2=("""Insert Into VALIDATION.dbo.REPORT_COMP_TR
+                        (SpinwebABI, SAPPRDONo, CompQty, CredQty, ScrapQty, ParentLotNo, NewLotNo, WhseFinish, ItemCodeStart, ItemCodeFinish, byprodAdd)
+                        values
+                        ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}', 'N')""".format(workorder, prdo, compqty, credqty, scrapqty, credlot, finlot, 'T_UTC', startitem, finitem))
+                cursor.execute(query2)
     
     
     print("Completed insert of records into {0} Database Report comp table".format('VALIDATION'))
@@ -499,7 +515,7 @@ def byproduct_updateSAP():
         
     for x in byprod:
         # print(x)
-        query4 = ("""UPDATE VALIDATION.dbo.BY_PROD_ACTIVE_TR Set byprodAdd = 'Y' WHERE SpinwebABI = '{0}'""".format(x))
+        query4 = ("""UPDATE VALIDATION.dbo.BY_PROD_ACTIVE_TR Set byprodAdd = 'Y' WHERE workOrder = '{0}'""".format(x))
         cursor.execute(query4)
     ## ----------------------------------------------------------- ##
         
@@ -679,7 +695,7 @@ def receipt_inSAP():
         result2 = cursor.fetchone()
         
     for x in byprod_active_update:
-        query5 = ("""UPDATE VALIDATION.dbo.BY_PROD_ACTIVE_TR Set receiptDone = 'Y', receiptDate = GETDATE()""")
+        query5 = ("""UPDATE VALIDATION.dbo.BY_PROD_ACTIVE_TR Set receiptDone = 'Y', receiptDate = GETDATE() Where workOrder = '{0}'""".format(x))
         cursor.execute(query5)
     ## ----------------------------------------------------------------------- ##
     
@@ -789,6 +805,68 @@ reportcomp()
 errortable()
 
 ## -- Start Production Order processing in SAP second run -- ##
+
+createPRDO_inSAP()
+byproduct_updateSAP()
+receipt_inSAP()
+close_PRDO()
+process_Error()
+
+## -- Added 12/31/2021 Clear lists for third round run -- ##
+
+spinwebdata.clear()
+sapimport.clear()
+sapcomp.clear()
+manerror.clear()
+success_create_prdo.clear()
+processerror.clear()
+processcreate.clear()
+processcomp.clear()
+byprod.clear()
+byprod_active.clear()
+byprod_active_update.clear()
+
+## -- Third round run -- ##
+
+datagather()
+parse()
+createPRDO()
+byProd_Active()
+reportcomp()
+errortable()
+
+## -- Start Production Order processing in SAP third run -- ##
+
+createPRDO_inSAP()
+byproduct_updateSAP()
+receipt_inSAP()
+close_PRDO()
+process_Error()
+
+## -- Added 1/06/2022 Clear lists for fourth round run -- ##
+
+spinwebdata.clear()
+sapimport.clear()
+sapcomp.clear()
+manerror.clear()
+success_create_prdo.clear()
+processerror.clear()
+processcreate.clear()
+processcomp.clear()
+byprod.clear()
+byprod_active.clear()
+byprod_active_update.clear()
+
+## -- fourth round run -- ##
+
+datagather()
+parse()
+createPRDO()
+byProd_Active()
+reportcomp()
+errortable()
+
+## -- Start Production Order processing in SAP fourth run -- ##
 
 createPRDO_inSAP()
 byproduct_updateSAP()
