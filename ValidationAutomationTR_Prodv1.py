@@ -549,7 +549,7 @@ def receipt_inSAP():
     while result1:
     
         ## -- Added Code 12/28/2021 for Active Byproduct Handling -- ##
-        query6 = ("""Select * from VALIDATION.dbo.BY_PROD_ACTIVE_TR Where byprodAdd = 'Y' and receiptDone = 'N' and SAPPRDONo = '{0}'""".format(result1[1]))
+        query6 = ("""Select * from VALIDATION.dbo.BY_PROD_ACTIVE_TR Where byprodAdd = 'Y' and receiptDone = 'Y' and SAPPRDONo = '{0}'""".format(result1[1]))
         cursor2.execute(query6)
         result3 = cursor2.fetchone()
         if result3 == None:
