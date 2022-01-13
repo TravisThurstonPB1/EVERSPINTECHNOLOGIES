@@ -27,7 +27,7 @@ def alert():
     query = ("SELECT * FROM EverspinTech.dbo.vw_TR_Process_report ORDER BY SAP_PRDO")
     cursor.execute(query)
     # print(result)
-    columns = ['SAP_PRDO', 'TR_WorkOrder', 'ItemCode', 'Status', 'CompleteQty', 'ErrorReason', 'LastUpdateTime', 'LastEditBy']
+    columns = ['SAP_PRDO', 'TR_WorkOrder', 'ItemCode', 'Status', 'CompleteQty', 'ErrorReason', 'LastUpdateTime', 'LastEditBy', 'CreditLot', 'IssueBy']
     # columns=[i[0].title() for i in cursor.description]
     # print(columns)
     # input()
