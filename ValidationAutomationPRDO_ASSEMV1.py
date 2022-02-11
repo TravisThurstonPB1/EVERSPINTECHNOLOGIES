@@ -33,7 +33,22 @@ def dataGather():
 	mysqlcon = pymysql.connect(user=mysqllogin.user, password=mysqllogin.password, host='10.10.60.198', port=3306, database='mtsdb')
 	cursor = mysqlcon.cursor()
 	#----- Added Scrap quantity calculation to main Query on 5/13/2021 -----#
-	mySQLcomVT1 = ("Select T1.ABI 'ABI', T1.AssyLot, CASE WHEN ifnull(T2.PONumber,'') = '' THEN 0 ELSE T2.PONumber END as 'PONumber', T1.waferLotAll, T1.assyPartNumber, ifnull(T1.assyTraceCode, '0') 'traceCode', T1.lotType, concat(\"A_\",T1.assyLocation) 'WhsStart', 'T_UTC' as 'WhsFinish', ifnull(T2.dieQty,0) 'StartQty', T1.assyinQty 'AssemStart', ifnull(T1.shipQty, 0) 'shipQty', ifnull(T3.dieQty,'0')/count(T4.waferLotAll) 'Scrap' from mtsdb.tblAssyLotInfo T1 left join mtsdb.tblABILog T2 on Case when T1.ABI like 'EABI%' then left(replace(replace(T1.ABI,'_',''),'-',''),18) else left(replace(replace(T1.ABI,'_',''),'-',''),17) end = replace(T2.ABI,'_','') left join mtsdb.tblABILog T3 on T1.waferLotAll = T3.waferLot and T3.lotRelease = 'Scrap' LEFT JOIN mtsdb.tblAssyLotInfo T4 on T1.waferLotAll = T4.waferLotAll where ifnull(T1.ABI,'0') != '0' and T1.assyInDate >= date_add(curdate(), INTERVAL -120 DAY) and ifnull(T1.waferLotAll,'') != '' and ifnull(T1.ABI,'') != '' Group by T1.ABI, T1.AssyLot, T2.PoNumber, T1.waferLotAll, T1.assyPartNumber, T1.assyTraceCode, T1.lotType, T1.assyLocation, T2.dieQty, T1.assyinQty, T1.shipQty, T3.dieQty")
+	mySQLcomVT1 = ("""Select T1.ABI 'ABI', T1.AssyLot, CASE WHEN ifnull(T2.PONumber,'') = '' THEN 0 ELSE T2.PONumber END as 'PONumber'
+                , T1.waferLotAll, T1.assyPartNumber, ifnull(T1.assyTraceCode, '0') 'traceCode', T1.lotType, concat("A_",T1.assyLocation) 'WhsStart', 'T_UTC' as 'WhsFinish', ifnull(T2.dieQty,0) 'StartQty'
+                , T1.assyinQty 'AssemStart'
+                , ifnull(T1.shipQty, 0) 'shipQty'
+                , ifnull(T3.dieQty,'0')/count(T4.waferLotAll) 'Scrap' 
+
+                from mtsdb.tblAssyLotInfo T1 
+                left join mtsdb.tblABILog T2 on Case when T1.ABI like 'EABI%' then left(replace(replace(T1.ABI,'_',''),'-',''),18) else left(replace(replace(T1.ABI,'_',''),'-',''),17) end = replace(T2.ABI,'_','') 
+                left join mtsdb.tblABILog T3 on T1.waferLotAll = T3.waferLot and T3.lotRelease = 'Scrap' 
+                LEFT JOIN mtsdb.tblAssyLotInfo T4 on T1.waferLotAll = T4.waferLotAll 
+
+                where T1.assyInDate >= date_add(curdate(), INTERVAL -120 DAY) and ifnull(T1.waferLotAll,'') != '' and ifnull(T1.ABI,'') != '' 
+                and IFNULL(T1.ABI,'') not like 'EABI%'
+
+                Group by T1.ABI, T1.AssyLot, T2.PoNumber, T1.waferLotAll, T1.assyPartNumber
+                , T1.assyTraceCode, T1.lotType, T1.assyLocation, T2.dieQty, T1.assyinQty, T1.shipQty, T3.dieQty""")
 	cursor.execute(mySQLcomVT1)
 	results = cursor.fetchone()
 
@@ -384,6 +399,8 @@ dataParse()
 createPRDOTbl()
 reportCompTbl()
 manualEntry()
+
+
 
 
 
