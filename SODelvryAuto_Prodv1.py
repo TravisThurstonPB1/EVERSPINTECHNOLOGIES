@@ -94,7 +94,7 @@ def parse():
             query1 = ("""Select T0.LineNum, T0.VisOrder, T0.LineStatus, T0.Quantity, T0.ItemCode, T1.DocNum, T0.DocEntry
                         from EverspinTech.dbo.RDR1 T0
                         INNER JOIN EverspinTech.dbo.ORDR T1 on T0.DocEntry = T1.DocEntry
-                        WHERE T1.DocNum = '{0}' and T0.VisOrder = '{1}'""".format(sonum, linenum))
+                        WHERE T1.DocNum = '{0}' and CASE WHEN T1.DocDate <= '20220101' then T0.LineNum Else T0.VisOrder end = '{1}'""".format(sonum, linenum))
             cursor.execute(query1)
             result1 = cursor.fetchone()
             
