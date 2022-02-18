@@ -33,22 +33,29 @@ def dataGather():
 	mysqlcon = pymysql.connect(user=mysqllogin.user, password=mysqllogin.password, host='10.10.60.198', port=3306, database='mtsdb')
 	cursor = mysqlcon.cursor()
 	#----- Added Scrap quantity calculation to main Query on 5/13/2021 -----#
-	mySQLcomVT1 = ("""Select T1.ABI 'ABI', T1.AssyLot, CASE WHEN ifnull(T2.PONumber,'') = '' THEN 0 ELSE T2.PONumber END as 'PONumber'
-                , T1.waferLotAll, T1.assyPartNumber, ifnull(T1.assyTraceCode, '0') 'traceCode', T1.lotType, concat("A_",T1.assyLocation) 'WhsStart', 'T_UTC' as 'WhsFinish', ifnull(T2.dieQty,0) 'StartQty'
-                , T1.assyinQty 'AssemStart'
+	mySQLcomVT1 = ("""Select T2.ABI 'ABI'
+				, IFNULL(T1.AssyLot,'') 'AssyLot'
+				, CASE WHEN ifnull(T2.PONumber,'') = '' THEN 0 ELSE T2.PONumber END as 'PONumber'
+                , T2.waferLot
+				, T2.deviceName
+				, ifnull(T1.assyTraceCode, '0') 'traceCode'
+				, T2.ABIType
+				, concat("A_", T2.subconName) 'WhsStart'
+				, 'T_UTC' as 'WhsFinish'
+				, CAST(ifnull(T2.dieQty,0) as int) 'StartQty'
+                , CAST(IFNULL(T1.assyinQty,0) as int) 'AssemStart'
                 , ifnull(T1.shipQty, 0) 'shipQty'
-                , ifnull(T3.dieQty,'0')/count(T4.waferLotAll) 'Scrap' 
+                , CAST(IFNULL(ifnull(T3.dieQty,'0')/IFNULL(count(T4.waferLotAll),1),'0') as int) 'Scrap' 
 
-                from mtsdb.tblAssyLotInfo T1 
-                left join mtsdb.tblABILog T2 on Case when T1.ABI like 'EABI%' then left(replace(replace(T1.ABI,'_',''),'-',''),18) else left(replace(replace(T1.ABI,'_',''),'-',''),17) end = replace(T2.ABI,'_','') 
-                left join mtsdb.tblABILog T3 on T1.waferLotAll = T3.waferLot and T3.lotRelease = 'Scrap' 
+                from mtsdb.tblABILog T2 
+                left join mtsdb.tblAssyLotInfo T1  on Case when T1.ABI like 'EABI%' then left(replace(replace(T1.ABI,'_',''),'-',''),18) else left(replace(replace(T1.ABI,'_',''),'-',''),17) end = replace(T2.ABI,'_','') 
+                left join mtsdb.tblABILog T3 on T2.waferLot = T3.waferLot and T3.lotRelease = 'Scrap' 
                 LEFT JOIN mtsdb.tblAssyLotInfo T4 on T1.waferLotAll = T4.waferLotAll 
 
-                where T1.assyInDate >= date_add(curdate(), INTERVAL -120 DAY) and ifnull(T1.waferLotAll,'') != '' and ifnull(T1.ABI,'') != '' 
-                and IFNULL(T1.ABI,'') not like 'EABI%'
+                where T2.issueDate >= date_add(curdate(), INTERVAL -120 DAY) and IFNULL(T2.ABI,'') not like 'EABI%' and T2.PONumber != '1' and T2.lotRelease != 'Scrap'
 
                 Group by T1.ABI, T1.AssyLot, T2.PoNumber, T1.waferLotAll, T1.assyPartNumber
-                , T1.assyTraceCode, T1.lotType, T1.assyLocation, T2.dieQty, T1.assyinQty, T1.shipQty, T3.dieQty""")
+                , T1.assyTraceCode, T1.lotType, T1.assyLocation, T2.dieQty, T1.assyinQty, T1.shipQty, T3.dieQty, T2.deviceName""")
 	cursor.execute(mySQLcomVT1)
 	results = cursor.fetchone()
 
@@ -157,7 +164,15 @@ def dataParse():
         cursor1 = mysqlcon.cursor()
         for x in parse2:
             abi, waferlot, ewsitem, finitem = x
-            query = ("Select distinct T1.ABI 'ABI', CASE WHEN ifnull(T2.PONumber,'') = '' THEN 0 ELSE T2.PONumber END as 'PONumber', concat(\"A_\",T1.assyLocation) 'WhsStart', 'T_UTC' as 'WhsFinish', ifnull(T2.dieQty,0) 'StartQty' from mtsdb.tblAssyLotInfo T1 left join mtsdb.tblABILog T2 on Case when T1.ABI like 'EABI%' then left(replace(replace(T1.ABI,'_',''),'-',''),18) else left(replace(replace(T1.ABI,'_',''),'-',''),17) end = replace(T2.ABI,'_','') where T1.ABI = '{0}' and T1.waferLotAll = '{1}'".format(abi,waferlot))
+            query = ("""Select distinct T2.ABI 'ABI'
+                    , CASE WHEN ifnull(T2.PONumber,'') = '' THEN 0 ELSE T2.PONumber END as 'PONumber'
+                    , concat("A_",T2.subconName) 'WhsStart'
+                    , 'T_UTC' as 'WhsFinish'
+                    , ifnull(T2.dieQty,0) 'StartQty' 
+
+                    from mtsdb.tblABILog T2 
+
+                    where T2.ABI = '{0}' and T2.waferLot = '{1}'""".format(abi,waferlot))
             cursor1.execute(query)
             results = cursor1.fetchone()
             verify = (abi, results[1], finitem, results[4], results[3], ewsitem, results[2], waferlot)
@@ -399,6 +414,8 @@ dataParse()
 createPRDOTbl()
 reportCompTbl()
 manualEntry()
+
+
 
 
 
