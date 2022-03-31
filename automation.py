@@ -381,7 +381,7 @@ try:
 				else:
 					return r
 			ws_asy_WIP['A'+str(Amkor_ASY_count)] = r[13] # PartID
-			ws_asy_WIP['B'+str(Amkor_ASY_count)] = r[15] # LotID
+			ws_asy_WIP['B'+str(Amkor_ASY_count)] = r[15].strip() # LotID
 			ws_asy_WIP['C'+str(Amkor_ASY_count)] = r[16] # ParentLot
 			ws_asy_WIP['D'+str(Amkor_ASY_count)] = checkQty(r[62]) # Qty
 			ws_asy_WIP['E'+str(Amkor_ASY_count)] = "Amkor" # Location
@@ -421,7 +421,7 @@ try:
 					return total
 			
 			ws_asy_WIP['A'+str(CHM_Assy_WIP_count)] = r[5] # PartID
-			ws_asy_WIP['B'+str(CHM_Assy_WIP_count)] = r[6] # LotID
+			ws_asy_WIP['B'+str(CHM_Assy_WIP_count)] = r[6].strip() # LotID
 			ws_asy_WIP['C'+str(CHM_Assy_WIP_count)] = "" # ParentLot
 			ws_asy_WIP['D'+str(CHM_Assy_WIP_count)] = checkQty(r) # Qty
 			ws_asy_WIP['E'+str(CHM_Assy_WIP_count)] = "CHM Assy WIP" # Location
@@ -446,7 +446,7 @@ try:
 				else:
 					return r
 			ws_asy_WIP['A'+str(CHM_CP_WIP_count)] = r[2] # PartID
-			ws_asy_WIP['B'+str(CHM_CP_WIP_count)] = r[3] # LotID
+			ws_asy_WIP['B'+str(CHM_CP_WIP_count)] = r[3].strip() # LotID
 			ws_asy_WIP['C'+str(CHM_CP_WIP_count)] = "" # ParentLot
 			ws_asy_WIP['D'+str(CHM_CP_WIP_count)] = checkQty(r[9]) # Qty
 			ws_asy_WIP['E'+str(CHM_CP_WIP_count)] = "CHM_CP_WIP" # Location
@@ -471,7 +471,7 @@ try:
 				else:
 					return r
 			ws_asy_WIP['A'+str(CHM_Assy_Inv_count)] = r[0] # PartID
-			ws_asy_WIP['B'+str(CHM_Assy_Inv_count)] = r[2] # LotID
+			ws_asy_WIP['B'+str(CHM_Assy_Inv_count)] = r[2].strip() # LotID
 			ws_asy_WIP['C'+str(CHM_Assy_Inv_count)] = "" # ParentLot
 			ws_asy_WIP['D'+str(CHM_Assy_Inv_count)] = checkQty(r[5]) # Qty
 			ws_asy_WIP['E'+str(CHM_Assy_Inv_count)] = "CHM_Assy_Inv" # Location
@@ -491,9 +491,9 @@ try:
 
 			def checkLot(r):
 				if len(r[8]) > 0:
-					return r[8]
+					return r[8].strip()
 				else:
-					return r[5]
+					return r[5].strip()
 			def checkQty(r):
 				if len(r[13]) > 0:
 					return int(r[13])
@@ -540,7 +540,7 @@ try:
 					else:
 						return int(r[8])
 			ws_asy_WIP['A'+str(OSE_WIP_count)] = r[1] # PartID
-			ws_asy_WIP['B'+str(OSE_WIP_count)] = r[6] # LotID
+			ws_asy_WIP['B'+str(OSE_WIP_count)] = r[6].strip() # LotID
 			ws_asy_WIP['C'+str(OSE_WIP_count)] = "" # ParentLot
 			ws_asy_WIP['D'+str(OSE_WIP_count)] = checkQty(r) # Qty
 			ws_asy_WIP['E'+str(OSE_WIP_count)] = "OSE_WIP" # Location
@@ -565,7 +565,7 @@ try:
 				else:
 					return r
 			ws_asy_WIP['A'+str(UTC_EVERSPIN_AssyWIP_count)] = r[4] # PartID
-			ws_asy_WIP['B'+str(UTC_EVERSPIN_AssyWIP_count)] = r[12] # LotID
+			ws_asy_WIP['B'+str(UTC_EVERSPIN_AssyWIP_count)] = r[12].strip() # LotID
 			ws_asy_WIP['C'+str(UTC_EVERSPIN_AssyWIP_count)] = "" # ParentLot
 			ws_asy_WIP['D'+str(UTC_EVERSPIN_AssyWIP_count)] = checkQty(r[11]) # Qty
 			ws_asy_WIP['E'+str(UTC_EVERSPIN_AssyWIP_count)] = "UTC_EVERSPIN_AssyWIP" # Location
@@ -590,7 +590,7 @@ try:
 				else:
 					return r
 			ws_asy_WIP['A'+str(UTL_Assy_count)] = r[1] # PartID
-			ws_asy_WIP['B'+str(UTL_Assy_count)] = r[6] # LotID
+			ws_asy_WIP['B'+str(UTL_Assy_count)] = r[6].strip() # LotID
 			ws_asy_WIP['C'+str(UTL_Assy_count)] = "" # ParentLot
 			ws_asy_WIP['D'+str(UTL_Assy_count)] = checkQty(r[34]) # Qty
 			ws_asy_WIP['E'+str(UTL_Assy_count)] = "UTL_Assy" # Location
@@ -601,6 +601,10 @@ except NameError:
 	UTL_Assy_count = UTC_EVERSPIN_AssyWIP_count
 	pass
 
+if UTL_Assy_count == 0:
+	list1 = [UTC_EVERSPIN_AssyWIP_count , OSE_WIP_count , DAILY_WIP_UDG_count , CHM_Assy_Inv_count , CHM_CP_WIP_count , CHM_Assy_WIP_count , Amkor_ASY_count ]
+	UTL_Assy_count = max(list1)
+	
 ws_asy_WIP['A'+str(UTL_Assy_count)] = "Total"
 ws_asy_WIP['D'+str(UTL_Assy_count)] = "=SUM(D2:D"+str(UTL_Assy_count-1)+")"
 ws_asy_WIP['F'+str(UTL_Assy_count)] = "=SUM(F2:F"+str(UTL_Assy_count-1)+")"
@@ -694,7 +698,7 @@ for r in range(max_row):
 	   ws_UTC_pivot['B3'] = 'Sum of MOVE_IN_QTY'
 	   try:
 		   ws_UTC_pivot[get_column_letter(col+c)+str(row+r)] = data[r][c]
-		   ws_UTC_pivot[get_column_letter(col1+c)+str(row+r)] = index[r]
+		   ws_UTC_pivot[get_column_letter(col1+c)+str(row+r)] = index[r].strip()
 	   except:
 		   ws_UTC_pivot[get_column_letter(col+c)+str(row+r)] = data[r][c]
 		   pass
@@ -719,8 +723,8 @@ for r in range(max_row):
 	   ws_UTC_pivot['F3'] = 'Total'
 	   try:
 		   ws_UTC_pivot[get_column_letter(col+c)+str(row+r)] = data[r][c]
-		   ws_UTC_pivot[get_column_letter(col1+c)+str(row+r)] = index[r][0]
-		   ws_UTC_pivot[get_column_letter(col2+c)+str(row+r)] = index[r][1]
+		   ws_UTC_pivot[get_column_letter(col1+c)+str(row+r)] = index[r][0].strip()
+		   ws_UTC_pivot[get_column_letter(col2+c)+str(row+r)] = index[r][1].strip()
 	   except:
 		   ws_UTC_pivot[get_column_letter(col+c)+str(row+r)] = data[r][c]
 		   ws_UTC_pivot[get_column_letter(col1+c)+str(row+r)] = index[r][0]
@@ -746,8 +750,8 @@ for r in range(max_row):
 	   ws_UTC_pivot['J3'] = 'Total'
 	   try:
 		   ws_UTC_pivot[get_column_letter(col+c)+str(row+r)] = data[r][c]
-		   ws_UTC_pivot[get_column_letter(col1+c)+str(row+r)] = index[r][0]
-		   ws_UTC_pivot[get_column_letter(col2+c)+str(row+r)] = index[r][1]
+		   ws_UTC_pivot[get_column_letter(col1+c)+str(row+r)] = index[r][0].strip()
+		   ws_UTC_pivot[get_column_letter(col2+c)+str(row+r)] = index[r][1].strip()
 	   except:
 		   ws_UTC_pivot[get_column_letter(col+c)+str(row+r)] = data[r][c]
 		   ws_UTC_pivot[get_column_letter(col1+c)+str(row+r)] = index[r][0]
@@ -771,7 +775,7 @@ for r in range(max_row):
 	   ws_UTC_pivot['M3'] = 'Sum of MOVE_IN_QTY'
 	   try:
 		   ws_UTC_pivot[get_column_letter(col+c)+str(row+r)] = data[r][c]
-		   ws_UTC_pivot[get_column_letter(col1+c)+str(row+r)] = index[r]
+		   ws_UTC_pivot[get_column_letter(col1+c)+str(row+r)] = index[r].strip()
 	   except:
 		   ws_UTC_pivot[get_column_letter(col+c)+str(row+r)] = data[r][c]
 		   pass
@@ -832,10 +836,10 @@ for r in range(max_row):
 	   try:
 		   count = count + 1
 		   ws_UTC_new[get_column_letter(col5+c)+str(row+r)] = data[r][c]
-		   ws_UTC_new[get_column_letter(col1+c)+str(row+r)] = index[r][0]
-		   ws_UTC_new[get_column_letter(col2+c)+str(row+r)] = index[r][1]
-		   ws_UTC_new[get_column_letter(col3+c)+str(row+r)] = index[r][2]
-		   ws_UTC_new[get_column_letter(col4+c)+str(row+r)] = index[r][3]
+		   ws_UTC_new[get_column_letter(col1+c)+str(row+r)] = index[r][0].strip()
+		   ws_UTC_new[get_column_letter(col2+c)+str(row+r)] = index[r][1].strip()
+		   ws_UTC_new[get_column_letter(col3+c)+str(row+r)] = index[r][2].strip()
+		   ws_UTC_new[get_column_letter(col4+c)+str(row+r)] = index[r][3].strip()
 		   ws_UTC_new[get_column_letter(6+c)+str(row+r)] = "=IFERROR(VLOOKUP(B"+str(count)+",'Subledger Recon'!F:K,6,FALSE),0)"
 		   ws_UTC_new[get_column_letter(7+c)+str(row+r)] = "=IFERROR(VLOOKUP(B"+str(count)+",'Subledger Recon'!G:K,5,FALSE),0)"
 		   ws_UTC_new[get_column_letter(8+c)+str(row+r)] = "=IFERROR(VLOOKUP(A"+str(count)+",'Subledger Recon'!F:K,6,FALSE),0)"
@@ -849,8 +853,8 @@ for r in range(max_row):
 	   except:
 		   count = count + 1
 		   ws_UTC_new[get_column_letter(col5+c)+str(row+r)] = data[r][c]
-		   ws_UTC_new[get_column_letter(col1+c)+str(row+r)] = index[r][0]
-		   ws_UTC_new[get_column_letter(col2+c)+str(row+r)] = index[r][1]
+		   ws_UTC_new[get_column_letter(col1+c)+str(row+r)] = index[r][0].strip()
+		   ws_UTC_new[get_column_letter(col2+c)+str(row+r)] = index[r][1].strip()
 		   ws_UTC_new[get_column_letter(6+c)+str(row+r)] = "=IFERROR(VLOOKUP(B"+str(count)+",'Subledger Recon'!F:K,6,FALSE),0)"
 		   ws_UTC_new[get_column_letter(7+c)+str(row+r)] = "=IFERROR(VLOOKUP(B"+str(count)+",'Subledger Recon'!G:K,5,FALSE),0)"
 		   ws_UTC_new[get_column_letter(8+c)+str(row+r)] = "=IFERROR(VLOOKUP(A"+str(count)+",'Subledger Recon'!F:K,6,FALSE),0)"
@@ -1013,8 +1017,6 @@ wb.save('output - '+ str(x.day)+'-'+ str(month)+'-'+ str(x.year) +'.xlsx')
 # wb.save('output - '+ str(30)+'-'+ str('09')+'-'+ str(x.year) +'.xlsx')
 # print('output - '+ str(30)+'-'+ str('09')+'-'+ str(x.year) +'.xlsx')
 print("Process Done!")
-
-
 
 
 
