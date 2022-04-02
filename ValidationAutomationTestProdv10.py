@@ -53,7 +53,7 @@ def dataGather1():
                         ELSE t1.ftEndLotID end 'lotID'
                     , cast(sum(distinct t1.qty) as unsigned) as 'qty'
                     , ifnull(t3.sourceDevice, t1.sourceDevice) 'assyPart'
-                    , ifnull(t4.assyLot,'NA') 'AssyLot'
+                    , ifnull(t4.assyLot,t1.lotID) 'AssyLot'
 
                     from mtsdb.tblWorkOrderItem t1 
                     inner join mtsdb.tblWorkOrder t2 on t1.workOrderID = t2.workOrderID 
