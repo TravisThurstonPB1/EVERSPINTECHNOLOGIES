@@ -46,7 +46,27 @@ def dataGather1():
 #		results = cursor1.fetchone()
 #		#bar.update()
 #	#bar.finish()
-	mySQLcomVT2 = ("select distinct t2.workOrder, t1.partNumber, t1.lotID, cast(sum(distinct t1.qty) as unsigned) as 'qty', ifnull(t3.sourceDevice, t1.sourceDevice) 'assyPart', ifnull(t4.assyLot,'NA') 'AssyLot' from mtsdb.tblWorkOrderItem t1 inner join mtsdb.tblWorkOrder t2 on t1.workOrderID = t2.workOrderID left join mtsdb.tblProdLotInfo t3 on (t1.lotID = t3.prodLot or t1.lotID = t3.assyLot) left join mtsdb.tblFTLotEndTrans t4 on t1.lotID = t4.startLot where t1.inputTime >= date_add(curdate(), INTERVAL -260 day) and t1.lotID != 'NA' and t1.partNumber != 'NA' and t2.workOrder = 'UTC2147-10' group by t2.workOrder, t1.partNumber, t1.lotID, t3.sourceDevice order by t2.workOrder")
+	mySQLcomVT2 = ("""select distinct t2.workOrder
+                    , t1.partNumber
+                    , CASE WHEN IFNULL(t1.ftEndLotID,'NA') = 'NA' THEN t1.lotID
+                        WHEN IFNULL(t1.ftEndLotID,'None')='None' THEN t1.lotID
+                        ELSE t1.ftEndLotID end 'lotID'
+                    , cast(sum(distinct t1.qty) as unsigned) as 'qty'
+                    , ifnull(t3.sourceDevice, t1.sourceDevice) 'assyPart'
+                    , ifnull(t4.assyLot,'NA') 'AssyLot'
+
+                    from mtsdb.tblWorkOrderItem t1 
+                    inner join mtsdb.tblWorkOrder t2 on t1.workOrderID = t2.workOrderID 
+                    left join mtsdb.tblProdLotInfo t3 on (t1.lotID = t3.prodLot or t1.lotID = t3.assyLot) 
+                    left join mtsdb.tblFTLotEndTrans t4 on t1.lotID = t4.startLot 
+
+                    where t1.inputTime >= date_add(curdate(), INTERVAL -260 day) and t1.lotID != 'NA' and t1.partNumber != 'NA' 
+                    #and IFNULL(t2.SAPStatus,'Closed')!='Closed' 
+                    and t1.itemStatus != 'Cancelled'
+
+                    group by t2.workOrder, t1.partNumber, t1.lotID, t3.sourceDevice 
+
+                    order by t2.workOrder""")
 	cursor1.execute(mySQLcomVT2)
 	results = cursor1.fetchone()
 	while results:
@@ -84,7 +104,7 @@ def dataParse2():
         testresult = cursor2.fetchone()
         if testresult != None:
 #			print(testresult, " Test1 \n")
-            verify = (x[0], x[1], x[2], x[3], testresult[1], x[4], testresult[4])
+            verify = (x[0], x[1], x[2], x[3], testresult[1], x[4], x[5])
 #			print("To check for Prior Completion:  ", verify, "\n")
 #			input()
             repcompSAP.append(verify)
@@ -226,7 +246,33 @@ def createPRDOTbl ():
 		if importSAP != False:
 			for x in importSAP:
 				a, b, c, d, e, f, g, h = x
-				query1 = ("select distinct t2.workOrder, '0' as PONumber, Case When t1.partNumber = 'CONDORTS' then 'CondorTS' when t1.partNumber = 'LYNX16TS' then 'Lynx16TS' when t1.partNumber = 'PANTHER16TS' then 'Panther16TS' When t1.partNumber = 'PANTHER16BG' then 'Panther16BG' when t1.partNumber = 'LYNX16BG' then 'Lynx16BG' when t1.partNumber = 'CONDORBG' then 'CondorBG' when t1.partNumber = 'CONDORDV' then 'CondorDV' When t1.partNumber = 'LYNX08TS' then 'Lynx08TS' when t1.partNumber = 'LYNX08BG' then 'Lynx08BG' When t1.partNumber = 'PANTHER08TS' then 'Panther08TS' When t1.partNumber = 'PANTHER08BG' then 'Panther08BG' else t1.partNumber end 'partNumber', sum(t1.qty) as 'PlannedQty', '{0}' as 'FinishWhse', t1.flow, t1.lotType, t1.traceCode, t1.lotID, '{1}' as 'On Hand', '{2}' as 'SourceDevice' from mtsdb.tblWorkOrderItem t1 inner join mtsdb.tblWorkOrder t2 on t1.workOrderID = t2.workOrderID left join mtsdb.tblProdLotInfo t3 on t1.lotID = t3.prodLot where t2.workOrder = '{3}' and t1.partNumber = '{4}' and t1.lotID = '{5}' Group by t2.workOrder, t1.partNumber, t2.vendor, t1.flow, t1.lotType, t1.traceCode, t1.lotID Having sum(t1.qty) <= '{6}' or cast(sum(distinct t1.qty) as unsigned) = '{7}'".format(h, f, g, a, b, c, d, d))
+				query1 = ("""select distinct t2.workOrder
+                , '0' as PONumber
+                , Case When t1.partNumber = 'CONDORTS' then 'CondorTS' 
+                    when t1.partNumber = 'LYNX16TS' then 'Lynx16TS' 
+                    when t1.partNumber = 'PANTHER16TS' then 'Panther16TS' 
+                    When t1.partNumber = 'PANTHER16BG' then 'Panther16BG'
+                    When t1.partNumber = 'PANTHER08BG' then 'Panther08BG'
+                    WHEN t1.partNumber = 'PANTHER08TS' then 'Panther08TS'
+                    when t1.partNumber = 'LYNX16BG' then 'Lynx16BG' 
+                    when t1.partNumber = 'CONDORBG' then 'CondorBG' 
+                    when t1.partNumber = 'CONDORDV' then 'CondorDV' 
+                    When t1.partNumber = 'LYNX08TS' then 'Lynx08TS' 
+                    when t1.partNumber = 'LYNX08BG' then 'Lynx08BG' 
+                    else t1.partNumber end 'partNumber'
+                    , sum(t1.qty) as 'PlannedQty'
+                    , '{0}' as 'FinishWhse'
+                    , t1.flow
+                    , t1.lotType
+                    , t1.traceCode
+                    , t1.lotID
+                    , '{1}' as 'On Hand'
+                    , '{2}' as 'SourceDevice' 
+                    from mtsdb.tblWorkOrderItem t1 
+                    inner join mtsdb.tblWorkOrder t2 on t1.workOrderID = t2.workOrderID 
+                    left join mtsdb.tblProdLotInfo t3 on t1.lotID = t3.prodLot where t2.workOrder = '{3}' and t1.partNumber = '{4}' and t1.lotID = '{5}' 
+                    Group by t2.workOrder, t1.partNumber, t2.vendor, t1.flow, t1.lotType, t1.traceCode, t1.lotID 
+                    Having sum(t1.qty) <= '{6}' or cast(sum(distinct t1.qty) as unsigned) = '{7}'""".format(h, f, g, a, b, c, d, d))
 				cursor.execute(query1)
 				result = cursor.fetchone()
 #				print(result)
@@ -272,15 +318,15 @@ def createPRDOTbl ():
 		for x in insertSAPCreate:
 			if x != None:
 				a, b, c, d, e, f, g, h, i, j, k = x
-				query3 = ("Select * from TEST_VALIDATION.dbo.CREATE_PRDO_TEST WITH(NOLOCK) where SpinwebABI = '{0}' and SAPPONo = '{1}' and ItemCodeFinish = '{2}' and PlannedQty = '{3}' and WhseFinish = '{4}' and TestCode ='{5}' and LotType = '{6}' and TraceCode = '{7}' and ParentLotNo = '{8}' and SAPOnHand = '{9}' and ItemCodeStart = '{10}'".format(a, b, c, d, e, f, g, h, i, j, k))
+				query3 = ("Select * from VALIDATION.dbo.CREATE_PRDO_TEST WITH(NOLOCK) where SpinwebABI = '{0}' and SAPPONo = '{1}' and ItemCodeFinish = '{2}' and PlannedQty = '{3}' and WhseFinish = '{4}' and TestCode ='{5}' and LotType = '{6}' and TraceCode = '{7}' and ParentLotNo = '{8}' and SAPOnHand = '{9}' and ItemCodeStart = '{10}'".format(a, b, c, d, e, f, g, h, i, j, k))
 				cursor.execute(query3)
 				result = cursor.fetchone()
 				if result == None:
-					query4 = ("Select * from TEST_VALIDATION.dbo.PROCESSED_CREATE_PRDO_TEST WITH(NOLOCK) where SpinwebABI = '{0}' and ItemCodeFinish = '{1}' and PlannedQty = '{2}' and WhseFinish = '{3}' and TestCode ='{4}' and LotType = '{5}' and TraceCode = '{6}' and ParentLotNo = '{7}' and ItemCodeStart = '{8}'".format(a, c, d, e, f, g, h, i, k))
+					query4 = ("Select * from VALIDATION.dbo.PROCESSED_CREATE_PRDO_TEST WITH(NOLOCK) where SpinwebABI = '{0}' and ItemCodeFinish = '{1}' and PlannedQty = '{2}' and WhseFinish = '{3}' and TestCode ='{4}' and LotType = '{5}' and TraceCode = '{6}' and ParentLotNo = '{7}' and ItemCodeStart = '{8}'".format(a, c, d, e, f, g, h, i, k))
 					cursor.execute(query4)
 					result = cursor.fetchone()
 					if result == None:
-						query2 = ("INSERT INTO TEST_VALIDATION.dbo.CREATE_PRDO_TEST (SpinwebABI, SAPPONo, ItemCodeFinish, PlannedQty, WhseFinish, TestCode, LotType, TraceCode, ParentLotNo, SAPOnHand, ItemCodeStart) values ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}', '{10}')".format(a, b, c, d, e, f, g, h, i, j, k))
+						query2 = ("INSERT INTO VALIDATION.dbo.CREATE_PRDO_TEST (SpinwebABI, SAPPONo, ItemCodeFinish, PlannedQty, WhseFinish, TestCode, LotType, TraceCode, ParentLotNo, SAPOnHand, ItemCodeStart) values ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}', '{10}')".format(a, b, c, d, e, f, g, h, i, j, k))
 						cursor.execute(query2)
 					else:
 						pass
@@ -313,34 +359,31 @@ def reportCompTbl():
 #				print(x)
 #				input()
                 a, b, c, d, e, f, g = x
-                query1 = ("select workOrder, '{0}' as 'PRDO No.', case when opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C6B3', 'C6B4') and flowCode in ('TF9A', 'TF2D', 'TF4D') then 'Complete' when opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C601') then 'Complete' when opnCodeEnd in ('LOST', 'C699') then 'Rejected' when opnCodeEnd in ('C6B3', 'C6B4', 'C6B5', 'C6B6', 'C6B7', 'C690','C69H', 'C69C', 'C6BC') then 'Rework' when opnCodeEnd like 'C5%' then 'Engineering' else opnCodeEnd end as 'completion Type', endQty, assyLot, assyLot, endLot, Case when opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C6B3', 'C6B4') and flowCode in ('TF9A', 'TF2D', 'TF4D') THEN 'T_UTC' When opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C601') THEN 'T_UTC' When opnCodeEnd in ('LOST', 'C699') THEN 'T_UTC_S' When opnCodeEnd in ('C6B3', 'C6B4', 'C6B5', 'C6B6', 'C6B7', 'C690','C69H', 'C69C', 'C6BC') THEN 'T_UTC_R' Else endLoc END as 'WhseFinish', assyDevice, targetDevice from mtsdb.tblFTLotEndTrans where workOrder = '{1}' and assyLot = '{2}' #and assyDevice like '{3}%'".format(e, a, c, f))
-                cursor.execute(query1)
-                result = cursor.fetchone()
-                #				print("Result line 324: ", result)
-                if result != None:
-                    while result:
-#						print('Assy Lot find ', result)
-#						input()
-                        verify = (result[0], result[1], result[2], result[3], result[4], result[5], result[6], result[7], result[8], result[9])
-                        insertSAPComp.append(verify)
-                        result = cursor.fetchone()
-                else:
-                    query2 = ("select workOrder, '{0}' as 'PRDO No.',  case when opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C6B3', 'C6B4') and flowCode in ('TF9A', 'TF2D', 'TF4D') then 'Complete' when opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C601') then 'Complete' when opnCodeEnd in ('LOST', 'C699') then 'Rejected' when opnCodeEnd in ('C6B3', 'C6B4', 'C6B5', 'C6B6', 'C6B7', 'C690','C69H', 'C69C', 'C6BC') then 'Rework' when opnCodeEnd like 'C5%' then 'Engineering' else opnCodeEnd end as 'completion Type', endQty, assyLot, assyLot, endLot, Case when opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C6B3', 'C6B4') and flowCode in ('TF9A', 'TF2D', 'TF4D') THEN 'T_UTC' When opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C601') THEN 'T_UTC' When opnCodeEnd in ('LOST', 'C699') THEN 'T_UTC_S' When opnCodeEnd in ('C6B3', 'C6B4', 'C6B5', 'C6B6', 'C6B7', 'C690','C69H', 'C69C', 'C6BC') THEN 'T_UTC_R' Else endLoc END as 'WhseFinish', assyDevice, targetDevice from mtsdb.tblFTLotEndTrans where workOrder = '{1}' and startLot = '{2}' #and assyDevice like '{3}%'".format(e, a, c, f))
-                    cursor.execute(query2)
-                    result2 = cursor.fetchone()
-                    #					print("Result line 336: ", result2)
-                    if result2 != None:
+                query2 = ("select workOrder, '{0}' as 'PRDO No.',  case when opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C6B3', 'C6B4') and flowCode in ('TF9A', 'TF2D', 'TF4D') then 'Complete' when opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C601') then 'Complete' when opnCodeEnd in ('LOST', 'C699') then 'Rejected' when opnCodeEnd in ('C6B3', 'C6B4', 'C6B5', 'C6B6', 'C6B7', 'C690','C69H', 'C69C', 'C6BC') then 'Rework' when opnCodeEnd like 'C5%' then 'Engineering' else opnCodeEnd end as 'completion Type', endQty, assyLot, assyLot, endLot, Case when opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C6B3', 'C6B4') and flowCode in ('TF9A', 'TF2D', 'TF4D') THEN 'T_UTC' When opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C601') THEN 'T_UTC' When opnCodeEnd in ('LOST', 'C699') THEN 'T_UTC_S' When opnCodeEnd in ('C6B3', 'C6B4', 'C6B5', 'C6B6', 'C6B7', 'C690','C69H', 'C69C', 'C6BC') THEN 'T_UTC_R' Else endLoc END as 'WhseFinish', assyDevice, targetDevice from mtsdb.tblFTLotEndTrans where workOrder = '{1}' and startLot = '{2}' #and assyDevice like '{3}%'".format(e, a, c, f))
+                cursor.execute(query2)
+                result2 = cursor.fetchone()
+                if result2 != None:
                         while result2:
 #							print('Start Lot Find ', result2)
 #							input()
                             verify = (result2[0], result2[1], result2[2], result2[3], result2[4], result2[5], result2[6], result2[7], result2[8], result2[9])
                             insertSAPComp.append(verify)
                             result2 = cursor.fetchone()
+                else:
+                    query1 = ("select workOrder, '{0}' as 'PRDO No.', case when opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C6B3', 'C6B4') and flowCode in ('TF9A', 'TF2D', 'TF4D') then 'Complete' when opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C601') then 'Complete' when opnCodeEnd in ('LOST', 'C699') then 'Rejected' when opnCodeEnd in ('C6B3', 'C6B4', 'C6B5', 'C6B6', 'C6B7', 'C690','C69H', 'C69C', 'C6BC') then 'Rework' when opnCodeEnd like 'C5%' then 'Engineering' else opnCodeEnd end as 'completion Type', endQty, assyLot, assyLot, endLot, Case when opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C6B3', 'C6B4') and flowCode in ('TF9A', 'TF2D', 'TF4D') THEN 'T_UTC' When opnCodeEnd in ('C600', 'C6B1', 'C6B2', 'C601') THEN 'T_UTC' When opnCodeEnd in ('LOST', 'C699') THEN 'T_UTC_S' When opnCodeEnd in ('C6B3', 'C6B4', 'C6B5', 'C6B6', 'C6B7', 'C690','C69H', 'C69C', 'C6BC') THEN 'T_UTC_R' Else endLoc END as 'WhseFinish', assyDevice, targetDevice from mtsdb.tblFTLotEndTrans where workOrder = '{1}' and assyLot = '{2}' #and assyDevice like '{3}%'".format(e, a, g, f))
+                    cursor.execute(query1)
+                    result = cursor.fetchone()
+                    #				print("Result line 324: ", result)
+                    if result != None:
+                        while result:
+    #						print('Assy Lot find ', result)
+    #						input()
+                            verify = (result[0], result[1], result[2], result[3], result[4], c, result[6], result[7], result[8], result[9])
+                            insertSAPComp.append(verify)
+                            result = cursor.fetchone()
                     else:
                         reason = (a, b, c, d, 'No Record Found in tblFTLotEndTrans, cannot report complete.  Line 331 Query Result.', e)
                         manualSAPnonexist.append(reason)
-#						result2 = cursor.fetchone()
-					#bar.update()
         else:
             print ("NoneType value, cannot insert into Report Complete Table.\n")
     except:
@@ -559,12 +602,12 @@ def reportCompTbl():
         for x in insertSAPComp2:
             if x != None:
                 a, b, c, d, e, f, g, h, i, j = x
-                query3 = ("select * from TEST_VALIDATION.dbo.PROCESSED_REPORT_COMP_TEST WITH(NOLOCK) where SpinwebABI = '{0}' and SAPPRDONo = '{1}' and Quantity = '{2}' and ParentLotNo = '{3}' and NewLotNo = '{4}'".format(a, b, d, f, g))
+                query3 = ("select * from VALIDATION.dbo.PROCESSED_REPORT_COMP_TEST WITH(NOLOCK) where SpinwebABI = '{0}' and SAPPRDONo = '{1}' and Quantity = '{2}' and ParentLotNo = '{3}' and NewLotNo = '{4}'".format(a, b, d, f, g))
                 cursor.execute(query3)
                 result = cursor.fetchone()
                 if result != None:
                     pass
-					# reason = (a, i, g, d, "Already Processed in TEST_VALIDATION Database, Verify Data. Line 555 Query Result.", b)
+					# reason = (a, i, g, d, "Already Processed in VALIDATION Database, Verify Data. Line 555 Query Result.", b)
 					# manualSAPnonexist.append(reason)
                 else:
                     verify = (a, b, c, d, e, f, g, h, i, j)
@@ -613,8 +656,8 @@ def reportCompTbl():
         for x in insertSAPComp4:
             if x != None:
                 a, b, c, d, e, f, g, h, i, j = x
-                query5 = ("select * from TEST_VALIDATION.dbo.REPORT_COMP_TEST WITH(NOLOCK) where SpinwebABI = '{0}' and SAPPRDONo = '{1}' and Quantity = '{2}' and ParentLotNo = '{3}' and NewLotNo = '{4}'".format(a, b, d, f, g))
-                query2 = ("insert into TEST_VALIDATION.dbo.REPORT_COMP_TEST (SpinwebABI, SAPPRDONo, CompletionType, Quantity, ParentLotNo, NewLotNo, WhseFinish, ItemCodeStart, ItemCodeFinish, AssyLotNo) values ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}')".format(a, b, c, d, f, g, h, i, j, e))
+                query5 = ("select * from VALIDATION.dbo.REPORT_COMP_TEST WITH(NOLOCK) where SpinwebABI = '{0}' and SAPPRDONo = '{1}' and Quantity = '{2}' and ParentLotNo = '{3}' and NewLotNo = '{4}'".format(a, b, d, f, g))
+                query2 = ("insert into VALIDATION.dbo.REPORT_COMP_TEST (SpinwebABI, SAPPRDONo, CompletionType, Quantity, ParentLotNo, NewLotNo, WhseFinish, ItemCodeStart, ItemCodeFinish, AssyLotNo) values ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}')".format(a, b, c, d, f, g, h, i, j, e))
                 cursor.execute(query5)
                 result = cursor.fetchone()
                 if result == None:
@@ -650,7 +693,7 @@ def errorEntry1():
 			for x in manualSAPnonexist:
 				a, b, c, d, e, f = x
 #				print(x)
-				query2= ("select t1.workOrder, t1.ItemCode, t1.LotNo, t1.ItemQty, t1.ErrorReason, t1.SAPPRDONo from TEST_VALIDATION.dbo.PROCESSED_ERROR_ENTRY_TEST T1 WITH(NOLOCK) where t1.workOrder = '{0}' and t1.ItemCode = '{1}' and t1.LotNo = '{2}' and t1.ItemQty = '{3}' and t1.ErrorReason = '{4}' and t1.SAPPRDONo = '{5}'".format(a, b, c, d, e, f))
+				query2= ("select t1.workOrder, t1.ItemCode, t1.LotNo, t1.ItemQty, t1.ErrorReason, t1.SAPPRDONo from VALIDATION.dbo.PROCESSED_ERROR_ENTRY_TEST T1 WITH(NOLOCK) where t1.workOrder = '{0}' and t1.ItemCode = '{1}' and t1.LotNo = '{2}' and t1.ItemQty = '{3}' and t1.ErrorReason = '{4}' and t1.SAPPRDONo = '{5}'".format(a, b, c, d, e, f))
 				cursor.execute(query2)
 				result = cursor.fetchone()
 				if result != None:
@@ -674,7 +717,7 @@ def errorEntry1():
 		if insertSAPman1 != None:
 			for x in insertSAPman1:
 				a, b, c, d, e, f = x
-				query2 = ("insert into TEST_VALIDATION.dbo.ERROR_ENTRY_TEST (workOrder, ItemCode, LotNo, ItemQty, ErrorReason, SAPPRDONo) values ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}')".format(a, b, c, d, e, f))
+				query2 = ("insert into VALIDATION.dbo.ERROR_ENTRY_TEST (workOrder, ItemCode, LotNo, ItemQty, ErrorReason, SAPPRDONo) values ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}')".format(a, b, c, d, e, f))
 				cursor.execute(query2)
 				#time.sleep(.0001)
 				#bar.update()
@@ -699,6 +742,7 @@ dataParse2()
 createPRDOTbl()
 reportCompTbl()
 errorEntry1()
+
 
 
 
