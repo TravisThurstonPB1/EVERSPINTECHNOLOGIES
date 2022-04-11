@@ -602,7 +602,7 @@ def reportCompTbl():
         for x in insertSAPComp2:
             if x != None:
                 a, b, c, d, e, f, g, h, i, j = x
-                query3 = ("select * from VALIDATION.dbo.PROCESSED_REPORT_COMP_TEST WITH(NOLOCK) where SpinwebABI = '{0}' and SAPPRDONo = '{1}' and Quantity = '{2}' and ParentLotNo = '{3}' and NewLotNo = '{4}'".format(a, b, d, f, g))
+                query3 = ("select * from VALIDATION.dbo.PROCESSED_REPORT_COMP_TEST WITH(NOLOCK) where SpinwebABI = '{0}' and SAPPRDONo = '{1}' and Quantity = '{2}' and NewLotNo = '{3}'".format(a, b, d, g))
                 cursor.execute(query3)
                 result = cursor.fetchone()
                 if result != None:
@@ -656,7 +656,7 @@ def reportCompTbl():
         for x in insertSAPComp4:
             if x != None:
                 a, b, c, d, e, f, g, h, i, j = x
-                query5 = ("select * from VALIDATION.dbo.REPORT_COMP_TEST WITH(NOLOCK) where SpinwebABI = '{0}' and SAPPRDONo = '{1}' and Quantity = '{2}' and ParentLotNo = '{3}' and NewLotNo = '{4}'".format(a, b, d, f, g))
+                query5 = ("select * from VALIDATION.dbo.REPORT_COMP_TEST WITH(NOLOCK) where SpinwebABI = '{0}' and SAPPRDONo = '{1}' and Quantity = '{2}' and NewLotNo = '{3}'".format(a, b, d, g))
                 query2 = ("insert into VALIDATION.dbo.REPORT_COMP_TEST (SpinwebABI, SAPPRDONo, CompletionType, Quantity, ParentLotNo, NewLotNo, WhseFinish, ItemCodeStart, ItemCodeFinish, AssyLotNo) values ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}')".format(a, b, c, d, f, g, h, i, j, e))
                 cursor.execute(query5)
                 result = cursor.fetchone()
