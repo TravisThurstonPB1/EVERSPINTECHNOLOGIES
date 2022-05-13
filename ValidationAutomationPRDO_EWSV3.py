@@ -30,7 +30,26 @@ def dataGather():
 	print ("Starting Data Gathering...")
 	mysqlcon = pymysql.connect(user=mysqllogin.user, password=mysqllogin.password, host='10.10.60.198', port=3306, database='mtsdb')
 	cursor1 = mysqlcon.cursor()
-	query = ("select distinct PROM.partID, CASE WHEN PROM.partID in ('WC01N10C-ENG', 'WB01N10C') THEN 'E_GTC' WHEN PROM.partID = 'WB06M35M' THEN 'F_CHD' ELSE 'E_CHD' End as 'WhsStart', PROM.waferLot, ifnull(S0.labLot,'0') 'ShipLot', ifnull(MRAM.promisLot,'NA') 'EWS Lot Start', ifnull(MRAM.currentQty,0) 'EWS Qty', 'E_CHD' as'EWSLocation', ifnull(MRAM.currentStage,'NA') 'currentStage', ifnull(MRAM.lotStatus,'NA') 'lotStatus', CASE WHEN MRAM.lotStatus = 'Scrapped' then 'Scrapped' else ifnull(MRAM.labLot,'NotShip') END as 'Ship Lot', CASE WHEN MRAM.lotStatus = 'Scrapped' then 'Scrapped' else cast(ifnull(S0.shipDieCnt,'0')as int) END as 'Ship Die Count', CASE WHEN MRAM.lotStatus = 'Scrapped' then 'Scrapped' When ifnull(WAF.shipToLoc,'')='' then 'E_CHD' else concat(\"A_\", ifnull(WAF.shipToLoc,'NotShip')) END as 'Ship To Loc' from mtsdb.tblPromisLotInfo PROM inner join mtsdb.tblCMOSLotInfo CMOS on PROM.waferLot = CMOS.waferLot Left join mtsdb.tblMRAMLabLotInfo MRAM on PROM.promisLot = MRAM.promisLot left join (Select MRAM2.labLot, IFNULL(sum(SHIP.shipDieCnt),0) 'shipDieCnt' from mtsdb.tblWaferProbeRecord SHIP inner join mtsdb.tblMRAMLabLotInfo MRAM2 on SHIP.promisLot = MRAM2.promisLot where FIND_IN_SET(SHIP.Wafer,(Select T0.waferlist from mtsdb.tblMRAMLabLotInfo T0 where T0.labLot = MRAM2.labLot))Group by MRAM2.labLot) S0 on MRAM.labLot = S0.labLot Left join mtsdb.tblWaferLotInfo WAF on MRAM.labLot = WAF.shipLot where PROM.partID != 'WB01N10C' and right(PROM.partID,3) != 'ENG' and PROM.lotStartDate >= date_add(curdate(), interval -720 day) and ifnull(PROM.shipQty,0)!=0 and MRAM.returnToFab != 2 ")
+	query = ("""select distinct PROM.partID
+                , CASE WHEN PROM.partID in ('WC01N10C-ENG', 'WB01N10C') THEN 'E_GTC' WHEN PROM.partID = 'WB06M35M' THEN 'F_CHD' ELSE 'E_CHD' End as 'WhsStart'
+                , PROM.waferLot
+                , ifnull(WAF.shipLot,'0') 'ShipLot'
+                , ifnull(MRAM.promisLot,'NA') 'EWS Lot Start'
+                , ifnull(MRAM.currentQty,0) 'EWS Qty'
+                , 'E_CHD' as'EWSLocation'
+                , ifnull(MRAM.currentStage,'NA') 'currentStage'
+                , ifnull(MRAM.lotStatus,'NA') 'lotStatus'
+                , CASE WHEN MRAM.lotStatus = 'Scrapped' then 'Scrapped' else ifnull(WAF.shipLot,'NotShip') END as 'Ship Lot'
+                , CASE WHEN MRAM.lotStatus = 'Scrapped' then 'Scrapped' else cast(ifnull(WAF.shipDieCnt,'0')as int) END as 'Ship Die Count'
+                , CASE WHEN MRAM.lotStatus = 'Scrapped' then 'Scrapped' When ifnull(WAF.shipToLoc,'')='' then 'E_CHD' else concat("A_", ifnull(WAF.shipToLoc,'NotShip')) END as 'Ship To Loc' 
+                
+                from mtsdb.tblPromisLotInfo PROM 
+                #Left join mtsdb.tblCMOSLotInfo CMOS on PROM.waferLot = CMOS.waferLot 
+                Left join mtsdb.tblMRAMLabLotInfo MRAM on PROM.promisLot = MRAM.promisLot 
+                #left join (Select MRAM2.labLot, IFNULL(sum(SHIP.shipDieCnt),0) 'shipDieCnt' from mtsdb.tblWaferProbeRecord SHIP inner join mtsdb.tblMRAMLabLotInfo MRAM2 on SHIP.promisLot = MRAM2.promisLot where FIND_IN_SET(SHIP.Wafer,(Select T0.waferlist from mtsdb.tblMRAMLabLotInfo T0 where T0.labLot = MRAM2.labLot))Group by MRAM2.labLot) S0 on MRAM.labLot = S0.labLot 
+                Left join mtsdb.tblWaferLotInfo WAF on MRAM.labLot = WAF.shipLot 
+                
+                where PROM.partID != 'WB01N10C' and right(PROM.partID,3) != 'ENG' and PROM.lotStartDate >= date_add(curdate(), interval -720 day) and ifnull(PROM.shipQty,0)!=0 and MRAM.returnToFab != 2 """)
 	cursor1.execute(query)
 	results = cursor1.fetchone()
 
